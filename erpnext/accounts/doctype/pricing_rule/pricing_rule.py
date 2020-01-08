@@ -32,12 +32,20 @@ class PricingRule(Document):
 
 		if not self.margin_type: self.margin_rate_or_amount = 0.0
 
+
 	def validate_duplicate_apply_on(self):
 		field = apply_on_dict.get(self.apply_on)
-		values = [d.get(frappe.scrub(self.apply_on)) for d in self.get(field)]
+		values = [(frappe.scrub(self.apply_on)) for d in self.get(field)]
+		print(len(values), len(set(values)))
+		#if len(values) != len(set(values)):
+		#	frappe.throw(_("Duplicate {0} found in the table").format(self.apply_on))
 
-		if len(values) != len(set(values)):
-			frappe.throw(_("Duplicate {0} found in the table").format(self.apply_on))
+	# def validate_duplicate_apply_on(self):
+	# 	field = apply_on_dict.get(self.apply_on)
+	# 	values = [d.get(frappe.scrub(self.apply_on)) for d in self.get(field)]
+    #
+	# 	if len(values) != len(set(values)):
+	# 		frappe.throw(_("Duplicate {0} found in the table").format(self.apply_on))
 
 	def validate_mandatory(self):
 		for apply_on, field in apply_on_dict.items():

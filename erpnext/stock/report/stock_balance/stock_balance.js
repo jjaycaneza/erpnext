@@ -1,8 +1,16 @@
+/**
+ * Created by justine on 11/12/19.
+ */
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and contributors
 // For license information, please see license.txt
 
 frappe.query_reports["Stock Balance"] = {
 	"filters": [
+		{
+			"fieldname": "report_title",
+			"label": "Report Title",
+			"fieldtype": "Data"
+		},
 		{
 			"fieldname":"from_date",
 			"label": __("From Date"),
@@ -79,5 +87,6 @@ frappe.query_reports["Stock Balance"] = {
 			"label": __("Show Variant Attributes"),
 			"fieldtype": "Check"
 		},
+
 	]
 }

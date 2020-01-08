@@ -273,26 +273,26 @@ def filter_pricing_rules_for_qty_amount(qty, rate, pricing_rules, args=None):
 	for rule in pricing_rules:
 		status = False
 		conversion_factor = 1
+		if rule.apply_on == "Item Code":
+			if rule.get("uom"):
+				conversion_factor = get_conversion_factor(rule.item_code, rule.uom).get("conversion_factor", 1)
 
-		if rule.get("uom"):
-			conversion_factor = get_conversion_factor(rule.item_code, rule.uom).get("conversion_factor", 1)
+			if (flt(qty) >= (flt(rule.min_qty) * conversion_factor)
+				and (flt(qty)<= (rule.max_qty * conversion_factor) if rule.max_qty else True)):
+				status = True
 
-		if (flt(qty) >= (flt(rule.min_qty) * conversion_factor)
-			and (flt(qty)<= (rule.max_qty * conversion_factor) if rule.max_qty else True)):
-			status = True
+			# if user has created item price against the transaction UOM
+			if rule.get("uom") == args.get("uom"):
+				conversion_factor = 1.0
 
-		# if user has created item price against the transaction UOM
-		if rule.get("uom") == args.get("uom"):
-			conversion_factor = 1.0
+			if status and (flt(rate) >= (flt(rule.min_amt) * conversion_factor)
+				and (flt(rate)<= (rule.max_amt * conversion_factor) if rule.max_amt else True)):
+				status = True
+			else:
+				status = False
 
-		if status and (flt(rate) >= (flt(rule.min_amt) * conversion_factor)
-			and (flt(rate)<= (rule.max_amt * conversion_factor) if rule.max_amt else True)):
-			status = True
-		else:
-			status = False
-
-		if status:
-			rules.append(rule)
+			if status:
+				rules.append(rule)
 
 	return rules
 

@@ -1,3 +1,6 @@
+/**
+ * Created by shiela on 11/23/19.
+ */
 // Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
@@ -116,7 +119,7 @@ frappe.query_reports["General Ledger"] = {
 			"fieldtype": "Select",
 			"options": ["", __("Group by Voucher"), __("Group by Voucher (Consolidated)"),
 				__("Group by Account"), __("Group by Party")],
-			"default": __("Group by Voucher (Consolidated)")
+			// "default": __("Group by Voucher (Consolidated)")
 		},
 		{
 			"fieldname":"tax_id",
