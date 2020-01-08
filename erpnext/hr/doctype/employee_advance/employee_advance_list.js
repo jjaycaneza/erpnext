@@ -10,6 +10,12 @@ frappe.listview_settings['Employee Advance'] = {
 			return [__("Unpaid"), "red"];
 		} else if(doc.status == "Claimed") {
 			return [__("Claimed"), "green"];
+		} else if(doc.status == "Unliquidated") {
+			return [__("Unliquidated"), "red"];
+		} else if(doc.status == "Liquidated") {
+			return [__("Liquidated"), "green"];
+		} else if(doc.status == "Partially Liquidated") {
+			return [__("Partially Liquidated"), "orange"];
 		}
 	}
 };
