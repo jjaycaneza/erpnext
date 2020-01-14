@@ -15,7 +15,7 @@ class LandedCostVoucher(Document):
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
 				pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
-					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center
+					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center,pr_item.business_units,pr_item.branch,pr_item.cost_center
 					from `tab{doctype} Item` pr_item where parent = %s
 					and exists(select name from tabItem where name = pr_item.item_code and is_stock_item = 1)
 					""".format(doctype=pr.receipt_document_type), pr.receipt_document, as_dict=True)
@@ -32,15 +32,20 @@ class LandedCostVoucher(Document):
 					item.receipt_document_type = pr.receipt_document_type
 					item.receipt_document = pr.receipt_document
 					item.purchase_receipt_item = d.name
+					item.business_units = d.business_units
+					item.branch = d.branch
+					item.cost_center = d.cost_center
 
 	def validate(self):
 		self.check_mandatory()
 		self.validate_purchase_receipts()
-		self.set_total_taxes_and_charges()
+		# self.set_total_taxes_and_charges()
 		if not self.get("items"):
 			self.get_items_from_purchase_receipts()
 		else:
-			self.validate_applicable_charges_for_item()
+			#WILL BE CHANGED CAUSE WILL BASE ON APPLICABLE CHARGES AND NOT TAX AND CHARGES
+			# self.validate_applicable_charges_for_item()
+			pass
 
 	def check_mandatory(self):
 		if not self.get("purchase_receipts"):
