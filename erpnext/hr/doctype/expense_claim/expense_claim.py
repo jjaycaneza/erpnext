@@ -66,7 +66,10 @@ class ExpenseClaim(AccountsController):
 			frappe.throw(_("""Approval Status must be 'Approved' or 'Rejected'"""))
 
 		self.update_task_and_project()
-		self.make_gl_entries()
+		if (self.is_return_ca == 0):
+			self.make_gl_entries()
+		else:
+			pass
 
 		if self.is_paid:
 			update_reimbursed_amount(self)
@@ -86,9 +89,12 @@ class ExpenseClaim(AccountsController):
 		self.update_claimed_amount_in_employee_advance()
 
 	def update_claimed_amount_in_employee_advance(self):
-		for d in self.get("advances"):
-			frappe.get_doc("Employee Advance", d.employee_advance).update_claimed_amount()
-
+		if (self.is_return_ca == 0):
+			for d in self.get("advances"):
+				frappe.get_doc("Employee Advance", d.employee_advance).update_claimed_amount()
+		else:
+			for d in self.get("advances"):
+				frappe.get_doc("Employee Advance", d.employee_advance).update_money_returned()
 	def update_task_and_project(self):
 		if self.task:
 			self.update_task()
@@ -99,6 +105,7 @@ class ExpenseClaim(AccountsController):
 		if flt(self.total_sanctioned_amount) > 0:
 			gl_entries = self.get_gl_entries()
 			make_gl_entries(gl_entries, cancel)
+
 
 	def get_gl_entries(self):
 		gl_entry = []
@@ -332,7 +339,7 @@ def get_advances(employee, advance_id=None):
 
 	return frappe.db.sql("""
 		select
-			name, posting_date, paid_amount, claimed_amount, advance_account
+			name, posting_date, paid_amount, claimed_amount, advance_account, outstanding_cash_advance
 		from
 			`tabEmployee Advance`
 		where {0}
@@ -341,7 +348,7 @@ def get_advances(employee, advance_id=None):
 
 @frappe.whitelist()
 def get_expense_claim(
-	employee_name, company, employee_advance_name, posting_date, paid_amount, claimed_amount):
+	employee_name, company, employee_advance_name, posting_date, paid_amount, claimed_amount, expense_claim_fund_source, branch, returned_money, business_units):
 	default_payable_account = frappe.get_cached_value('Company',  company,  "default_payable_account")
 	default_cost_center = frappe.get_cached_value('Company',  company,  'cost_center')
 
@@ -349,6 +356,10 @@ def get_expense_claim(
 	expense_claim.company = company
 	expense_claim.employee = employee_name
 	expense_claim.payable_account = default_payable_account
+	expense_claim.expense_claim_fund_source = expense_claim_fund_source
+	expense_claim.total_unclaimed = flt(paid_amount) - flt(claimed_amount)
+	expense_claim.branch = branch
+	expense_claim.business_units = business_units
 	expense_claim.cost_center = default_cost_center
 	expense_claim.is_paid = 1 if flt(paid_amount) else 0
 	expense_claim.append(
@@ -357,7 +368,7 @@ def get_expense_claim(
 			'employee_advance': employee_advance_name,
 			'posting_date': posting_date,
 			'advance_paid': flt(paid_amount),
-			'unclaimed_amount': flt(paid_amount) - flt(claimed_amount),
+			'unclaimed_amount': flt(paid_amount) - ((flt(claimed_amount) + flt(returned_money))),
 			'allocated_amount': flt(paid_amount) - flt(claimed_amount)
 		}
 	)

@@ -81,6 +81,27 @@ class EmployeeAdvance(Document):
 		self.set_status()
 		frappe.db.set_value("Employee Advance", self.name, "status", self.status)
 
+	def update_money_returned(self):
+		money_returned = frappe.db.sql("""
+			SELECT sum(ifnull(allocated_amount, 0))
+			FROM `tabExpense Claim Advance` eca, `tabExpense Claim` ec
+			WHERE
+				eca.employee_advance = %s
+				AND ec.approval_status="Approved"
+				AND ec.name = eca.parent
+				AND ec.docstatus=1
+				AND eca.allocated_amount > 0
+				AND ec.is_return_ca = 1
+		""", self.name)[0][0] or 0
+
+		print("++++++++returened++++++++++++++++++++")
+		print(money_returned)
+
+		frappe.db.set_value("Employee Advance", self.name, "returned_money", flt(money_returned))
+		self.reload()
+		self.set_status()
+		frappe.db.set_value("Employee Advance", self.name, "status", self.status)
+
 @frappe.whitelist()
 def get_due_advance_amount(employee, posting_date):
 	employee_due_amount = frappe.get_all("Employee Advance", \

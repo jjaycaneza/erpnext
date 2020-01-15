@@ -17,7 +17,7 @@ frappe.ui.form.on('Employee Advance', {
 		frm.set_query("advance_account", function() {
 			return {
 				filters: {
-					"root_type": "Asset",
+					"root_type": cur_frm.doc.employee_advance_fund_source == "Not Applicable" ? "Asset" : "Liability",
 					"is_group": 0,
 					"company": frm.doc.company
 				}
@@ -77,7 +77,10 @@ frappe.ui.form.on('Employee Advance', {
 				"posting_date": frm.doc.posting_date,
 				"paid_amount": frm.doc.paid_amount,
 				"claimed_amount": frm.doc.claimed_amount,
-				"expense_claim_fund_source": frm.doc.employee_advance_fund_source
+				"expense_claim_fund_source": frm.doc.employee_advance_fund_source,
+				"returned_money": frm.doc.returned_money,
+				"branch": frm.doc.branch,
+				"business_units": frm.doc.business_units
 			},
 			callback: function(r) {
 				const doclist = frappe.model.sync(r.message);
