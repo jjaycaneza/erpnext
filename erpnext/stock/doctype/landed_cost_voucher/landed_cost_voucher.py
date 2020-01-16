@@ -76,25 +76,28 @@ class LandedCostVoucher(Document):
 		self.total_taxes_and_charges = sum([flt(d.amount) for d in self.get("taxes")])
 
 	def validate_applicable_charges_for_item(self):
-		based_on = self.distribute_charges_based_on.lower()
-
-		total = sum([flt(d.get(based_on)) for d in self.get("items")])
-
-		if not total:
-			frappe.throw(_("Total {0} for all items is zero, may be you should change 'Distribute Charges Based On'").format(based_on))
-
-		total_applicable_charges = sum([flt(d.applicable_charges) for d in self.get("items")])
-
-		precision = get_field_precision(frappe.get_meta("Landed Cost Item").get_field("applicable_charges"),
-		currency=frappe.get_cached_value('Company',  self.company,  "default_currency"))
-
-		diff = flt(self.total_taxes_and_charges) - flt(total_applicable_charges)
-		diff = flt(diff, precision)
-
-		if abs(diff) < (2.0 / (10**precision)):
-			self.items[-1].applicable_charges += diff
+		if (self.landed_cost_voucher_type == "Update Fresh Goods Price"):
+			pass
 		else:
-			frappe.throw(_("Total Applicable Charges in Purchase Receipt Items table must be same as Total Taxes and Charges"))
+			based_on = self.distribute_charges_based_on.lower()
+
+			total = sum([flt(d.get(based_on)) for d in self.get("items")])
+
+			if not total:
+				frappe.throw(_("Total {0} for all items is zero, may be you should change 'Distribute Charges Based On'").format(based_on))
+
+			total_applicable_charges = sum([flt(d.applicable_charges) for d in self.get("items")])
+
+			precision = get_field_precision(frappe.get_meta("Landed Cost Item").get_field("applicable_charges"),
+			currency=frappe.get_cached_value('Company',  self.company,  "default_currency"))
+
+			diff = flt(self.total_taxes_and_charges) - flt(total_applicable_charges)
+			diff = flt(diff, precision)
+
+			if abs(diff) < (2.0 / (10**precision)):
+				self.items[-1].applicable_charges += diff
+			else:
+				frappe.throw(_("Total Applicable Charges in Purchase Receipt Items table must be same as Total Taxes and Charges"))
 
 
 
@@ -123,14 +126,20 @@ class LandedCostVoucher(Document):
 
 			# update stock & gl entries for cancelled state of PR
 			doc.docstatus = 2
+
+			doc.expense_account = "2004 - Accounts Payable ~ Temporary Asset - G"
 			doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
+
 			doc.make_gl_entries_on_cancel(repost_future_gle=False)
 
 
 			# update stock & gl entries for submit state of PR
 			doc.docstatus = 1
+			doc.expense_account = "2004 - Accounts Payable ~ Temporary Asset - G"
+			print(doc.as_dict())
 			doc.update_stock_ledger(via_landed_cost_voucher=True)
-			doc.make_gl_entries()
+			print(doc.as_dict())
+			print(doc.make_gl_entries())
 
 	def update_rate_in_serial_no(self, receipt_document):
 		for item in receipt_document.get("items"):
