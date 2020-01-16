@@ -1,3 +1,6 @@
+/**
+ * Created by shiela on 11/23/19.
+ */
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // For license information, please see license.txt
 
@@ -31,7 +34,38 @@ frappe.ui.form.on("Payment Reconciliation Payment", {
 				}
 			});
 		}
-	}
+	},
+	invoice_number_2: function (frm, cdt, cdn) {
+		var e = locals[cdt][cdn]
+		var invoice_type = frm.doc.invoices.filter(function(d) {
+			return d.invoice_number === e.invoice_number_2;
+		})[0].invoice_type;
+
+		e.invoice_number = invoice_type + " | " + e.invoice_number_2
+
+		var invoice_amount = frm.doc.invoices.filter(function(d) {
+			return d.invoice_number === e.invoice_number_2;
+		})[0].outstanding_amount;
+
+		frappe.model.set_value(cdt, cdn, "allocated_amount", Math.min(invoice_amount, e.amount));
+
+		frm.call({
+				doc: frm.doc,
+				method: 'get_difference_amount',
+				args: {
+					child_row: e
+				},
+				callback: function(r, rt) {
+					console.log(r)
+					if(r.message) {
+						frappe.model.set_value(cdt, cdn,
+							"difference_amount", r.message);
+					}
+				}
+			});
+
+		refresh_field("payments")
+    }
 });
 
 erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.extend({
@@ -216,18 +250,30 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 	set_invoice_options: function() {
 		var me = this;
 		var invoices = [];
+		var invoices_2 = [];
 
 		$.each(me.frm.doc.invoices || [], function(i, row) {
 			if (row.invoice_number && !in_list(invoices, row.invoice_number))
 				invoices.push(row.invoice_type + " | " + row.invoice_number);
+				// invoices.js/frappe-recorder.min.jspush(row.invoice_number);
+		});
+
+		$.each(me.frm.doc.invoices || [], function(i, row) {
+			if (row.invoice_number && !in_list(invoices, row.invoice_number))
+				// invoices.push(row.invoice_type + " | " + row.invoice_number);
+				invoices_2.push(row.invoice_number);
 		});
 
 		if (invoices) {
 			frappe.meta.get_docfield("Payment Reconciliation Payment", "invoice_number",
 				me.frm.doc.name).options = "\n" + invoices.join("\n");
 
+			frappe.meta.get_docfield("Payment Reconciliation Payment", "invoice_number_2",
+				me.frm.doc.name).options = "\n" + invoices_2.join("\n");
+
 			$.each(me.frm.doc.payments || [], function(i, p) {
 				if(!in_list(invoices, cstr(p.invoice_number))) p.invoice_number = null;
+				if(!in_list(invoices, cstr(p.invoice_number_2))) p.invoice_number_2 = null;
 			});
 		}
 

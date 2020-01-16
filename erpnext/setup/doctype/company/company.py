@@ -64,11 +64,16 @@ class Company(NestedSet):
 		})
 
 	def validate_default_accounts(self):
-		for field in ["default_bank_account", "default_cash_account",
-			"default_receivable_account", "default_payable_account",
-			"default_expense_account", "default_income_account",
-			"stock_received_but_not_billed", "stock_adjustment_account",
-			"expenses_included_in_valuation", "default_payroll_payable_account"]:
+		for field in ["default_cash_account",
+					  "default_receivable_account", "default_payable_account",
+					  "default_expense_account", "default_income_account",
+					  "stock_received_but_not_billed", "stock_adjustment_account",
+					  "expenses_included_in_valuation", "default_payroll_payable_account"]:
+		# for field in ["default_bank_account","default_cash_account",
+		# 	"default_receivable_account", "default_payable_account",
+		# 	"default_expense_account", "default_income_account",
+		# 	"stock_received_but_not_billed", "stock_adjustment_account",
+		# 	"expenses_included_in_valuation", "default_payroll_payable_account"]:
 				if self.get(field):
 					for_company = frappe.db.get_value("Account", self.get(field), "company")
 					if for_company != self.name:
@@ -181,10 +186,10 @@ class Company(NestedSet):
 
 	def set_default_accounts(self):
 		self._set_default_account("default_cash_account", "Cash")
-		self._set_default_account("default_bank_account", "Bank")
+		# self._set_default_account("default_bank_account", "Bank")
 		self._set_default_account("round_off_account", "Round Off")
-		self._set_default_account("accumulated_depreciation_account", "Accumulated Depreciation")
-		self._set_default_account("depreciation_expense_account", "Depreciation")
+		# self._set_default_account("accumulated_depreciation_account", "Accumulated Depreciation")
+		# self._set_default_account("depreciation_expense_account", "Depreciation")
 		self._set_default_account("capital_work_in_progress_account", "Capital Work in Progress")
 		self._set_default_account("asset_received_but_not_billed", "Asset Received But Not Billed")
 		self._set_default_account("expenses_included_in_asset_valuation", "Expenses Included In Asset Valuation")
@@ -252,7 +257,7 @@ class Company(NestedSet):
 	def set_mode_of_payment_account(self):
 		cash = frappe.db.get_value('Mode of Payment', {'type': 'Cash'}, 'name')
 		if cash and self.default_cash_account \
-			and not frappe.db.get_value('Mode of Payment Account', {'company': self.name, 'parent': cash}):
+				and not frappe.db.get_value('Mode of Payment Account', {'company': self.name, 'parent': 'Cash'}):
 			mode_of_payment = frappe.get_doc('Mode of Payment', cash)
 			mode_of_payment.append('accounts', {
 				'company': self.name,

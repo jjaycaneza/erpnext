@@ -31,6 +31,8 @@ class EmployeeAdvance(Document):
 				self.status = "Claimed"
 			elif self.paid_amount and self.advance_amount == flt(self.paid_amount):
 				self.status = "Paid"
+			elif self.employee_advance_fund_source != 'Not Applicable' and self.advance_amount == flt(self.paid_amount):
+				self.status = "Unliquidated"
 			else:
 				self.status = "Unpaid"
 		elif self.docstatus == 2:
@@ -79,6 +81,27 @@ class EmployeeAdvance(Document):
 		self.set_status()
 		frappe.db.set_value("Employee Advance", self.name, "status", self.status)
 
+	def update_money_returned(self):
+		money_returned = frappe.db.sql("""
+			SELECT sum(ifnull(allocated_amount, 0))
+			FROM `tabExpense Claim Advance` eca, `tabExpense Claim` ec
+			WHERE
+				eca.employee_advance = %s
+				AND ec.approval_status="Approved"
+				AND ec.name = eca.parent
+				AND ec.docstatus=1
+				AND eca.allocated_amount > 0
+				AND ec.is_return_ca = 1
+		""", self.name)[0][0] or 0
+
+		print("++++++++returened++++++++++++++++++++")
+		print(money_returned)
+
+		frappe.db.set_value("Employee Advance", self.name, "returned_money", flt(money_returned))
+		self.reload()
+		self.set_status()
+		frappe.db.set_value("Employee Advance", self.name, "status", self.status)
+
 @frappe.whitelist()
 def get_due_advance_amount(employee, posting_date):
 	employee_due_amount = frappe.get_all("Employee Advance", \
@@ -87,7 +110,7 @@ def get_due_advance_amount(employee, posting_date):
 	return sum([(emp.advance_amount - emp.paid_amount) for emp in employee_due_amount])
 
 @frappe.whitelist()
-def make_bank_entry(dt, dn):
+def make_bank_entry(dt, dn, eas):
 	from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
 
 	doc = frappe.get_doc(dt, dn)
@@ -98,6 +121,8 @@ def make_bank_entry(dt, dn):
 	je.posting_date = nowdate()
 	je.voucher_type = 'Bank Entry'
 	je.company = doc.company
+	je.employee_advance_fund_source = eas
+	je.employee_advance_reference = dn
 	je.remark = 'Payment against Employee Advance: ' + dn + '\n' + doc.purpose
 
 	je.append("accounts", {
@@ -116,5 +141,4 @@ def make_bank_entry(dt, dn):
 		"account_currency": payment_account.account_currency,
 		"account_type": payment_account.account_type
 	})
-
 	return je.as_dict()

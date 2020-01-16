@@ -183,6 +183,12 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"label": _("Undeposited Funds Reconciliation"),
+					"name": "Undeposited Funds Reconciliation",
+					"description": _("Reconcile fund in Undeposited Funds Account")
+				},
+				{
+					"type": "doctype",
 					"label": _("Update Bank Transaction Dates"),
 					"name": "Bank Reconciliation",
 					"description": _("Update bank payment dates with journals.")
@@ -213,6 +219,12 @@ def get_data():
 					"name": "Cheque Print Template",
 					"description": _("Setup cheque dimensions for printing")
 				},
+				{
+					"type": "doctype",
+					"label": _("Undeposited Funds Entry"),
+					"name": "Undeposited Funds Entry",
+					"description": _("All in repository for Undeposited Funds")
+				}
 			]
 		},
 		{

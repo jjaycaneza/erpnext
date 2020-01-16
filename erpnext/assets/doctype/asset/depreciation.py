@@ -50,6 +50,8 @@ def make_depreciation_entry(asset_name, date=None):
 			je.company = asset.company
 			je.finance_book = d.finance_book
 			je.remark = "Depreciation Entry against {0} worth {1}".format(asset_name, d.depreciation_amount)
+			je.business_units = asset.business_units
+			je.branch = asset.branch
 
 			je.append("accounts", {
 				"account": accumulated_depreciation_account,
@@ -125,6 +127,8 @@ def scrap_asset(asset_name):
 	je.posting_date = today()
 	je.company = asset.company
 	je.remark = "Scrap Entry for asset {0}".format(asset_name)
+	je.business_units = asset.business_units
+	je.branch = asset.branch
 
 	for entry in get_gl_entries_on_asset_disposal(asset):
 		entry.update({

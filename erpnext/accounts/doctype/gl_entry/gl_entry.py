@@ -59,8 +59,9 @@ class GLEntry(Document):
 		account_type = frappe.db.get_value("Account", self.account, "account_type")
 		if not (self.party_type and self.party):
 			if account_type == "Receivable":
-				frappe.throw(_("{0} {1}: Customer is required against Receivable account {2}")
-					.format(self.voucher_type, self.voucher_no, self.account))
+				#frappe.throw(_("{0} {1}: Customer is required against Receivable account {2}")
+				#	.format(self.voucher_type, self.voucher_no, self.account))
+				pass
 			elif account_type == "Payable":
 				frappe.throw(_("{0} {1}: Supplier is required against Payable account {2}")
 					.format(self.voucher_type, self.voucher_no, self.account))
@@ -72,9 +73,10 @@ class GLEntry(Document):
 
 	def pl_must_have_cost_center(self):
 		if frappe.db.get_value("Account", self.account, "report_type") == "Profit and Loss":
-			if not self.cost_center and self.voucher_type != 'Period Closing Voucher':
-				frappe.throw(_("{0} {1}: Cost Center is required for 'Profit and Loss' account {2}. Please set up a default Cost Center for the Company.")
-					.format(self.voucher_type, self.voucher_no, self.account))
+			# if not self.cost_center and self.voucher_type != 'Period Closing Voucher':
+			# 	frappe.throw(_("{0} {1}: Cost Center is required for 'Profit and Loss' account {2}. Please set up a default Cost Center for the Company.")
+			# 		.format(self.voucher_type, self.voucher_no, self.account))
+			pass
 		else:
 			from erpnext.accounts.utils import get_allow_cost_center_in_entry_of_bs_account
 			if not get_allow_cost_center_in_entry_of_bs_account() and self.cost_center:
@@ -91,8 +93,9 @@ class GLEntry(Document):
 			if account_type == "Profit and Loss" \
 				and self.company == dimension.company and dimension.mandatory_for_pl and not dimension.disabled:
 				if not self.get(dimension.fieldname):
-					frappe.throw(_("Accounting Dimension <b>{0}</b> is required for 'Profit and Loss' account {1}.")
-						.format(dimension.label, self.account))
+					# frappe.throw(_("Accounting Dimension <b>{0}</b> is required for 'Profit and Loss' account {1}.")
+					# 	.format(dimension.label, self.account))
+					pass
 
 			if account_type == "Balance Sheet" \
 				and self.company == dimension.company and dimension.mandatory_for_bs and not dimension.disabled:
@@ -110,13 +113,12 @@ class GLEntry(Document):
 
 	def validate_account_details(self, adv_adj):
 		"""Account must be ledger, active and not freezed"""
-
 		ret = frappe.db.sql("""select is_group, docstatus, company
 			from tabAccount where name=%s""", self.account, as_dict=1)[0]
-
 		if ret.is_group==1:
-			frappe.throw(_("{0} {1}: Account {2} cannot be a Group")
-				.format(self.voucher_type, self.voucher_no, self.account))
+			# frappe.throw(_("{0} {1}: Account {2} cannot be a Group")
+			# 	.format(self.voucher_type, self.voucher_no, self.account))
+			pass
 
 		if ret.docstatus==2:
 			frappe.throw(_("{0} {1}: Account {2} is inactive")

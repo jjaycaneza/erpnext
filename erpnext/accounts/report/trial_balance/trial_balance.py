@@ -53,7 +53,7 @@ def validate_filters(filters):
 
 def get_data(filters):
 
-	accounts = frappe.db.sql("""select name, account_number, parent_account, account_name, root_type, report_type, lft, rgt
+	accounts = frappe.db.sql("""select name, account_number, parent_account, account_name, root_type, report_type, lft, rgt, is_group
 
 		from `tabAccount` where company=%s order by lft""", filters.company, as_dict=True)
 	company_currency = erpnext.get_company_currency(filters.company)
@@ -236,7 +236,7 @@ def prepare_data(accounts, filters, total_row, parent_children_map, company_curr
 			"to_date": filters.to_date,
 			"currency": company_currency,
 			"account_name": ('{} - {}'.format(d.account_number, d.account_name)
-				if d.account_number else d.account_name)
+				if d.account_number and not d.is_group else d.account_name)
 		}
 
 		for key in value_fields:
