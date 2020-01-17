@@ -44,8 +44,8 @@ class LandedCostVoucher(Document):
 			self.get_items_from_purchase_receipts()
 		else:
 			#WILL BE CHANGED CAUSE WILL BASE ON APPLICABLE CHARGES AND NOT TAX AND CHARGES
-			# self.validate_applicable_charges_for_item()
-			pass
+			self.validate_applicable_charges_for_item()
+
 
 	def check_mandatory(self):
 		if not self.get("purchase_receipts"):
@@ -123,11 +123,11 @@ class LandedCostVoucher(Document):
 
 			# update latest valuation rate in serial no
 			self.update_rate_in_serial_no(doc)
-
+			
 			# update stock & gl entries for cancelled state of PR
 			doc.docstatus = 2
 
-			doc.expense_account = "2004 - Accounts Payable ~ Temporary Asset - G"
+
 			doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
 
 			doc.make_gl_entries_on_cancel(repost_future_gle=False)
@@ -138,8 +138,7 @@ class LandedCostVoucher(Document):
 			doc.expense_account = "2004 - Accounts Payable ~ Temporary Asset - G"
 			print(doc.as_dict())
 			doc.update_stock_ledger(via_landed_cost_voucher=True)
-			print(doc.as_dict())
-			print(doc.make_gl_entries())
+
 
 	def update_rate_in_serial_no(self, receipt_document):
 		for item in receipt_document.get("items"):
@@ -148,3 +147,7 @@ class LandedCostVoucher(Document):
 				if serial_nos:
 					frappe.db.sql("update `tabSerial No` set purchase_rate=%s where name in ({0})"
 						.format(", ".join(["%s"]*len(serial_nos))), tuple([item.valuation_rate] + serial_nos))
+
+	def update_last_purchase_rate(self):
+		for item in self.items:
+			frappe.db.sql("UPDATE `tabPurchase Order Item` SET last_purchase_rate =  WHERE ",(item['updated_rate']),as_dict=True)
