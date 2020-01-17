@@ -135,9 +135,14 @@ class LandedCostVoucher(Document):
 
 			# update stock & gl entries for submit state of PR
 			doc.docstatus = 1
-			doc.expense_account = "2004 - Accounts Payable ~ Temporary Asset - G"
-			print(doc.as_dict())
+
+
+			doc.expense_account_custom = "Hiiiiii"
+
 			doc.update_stock_ledger(via_landed_cost_voucher=True)
+			doc.make_gl_entries()
+			self.update_last_purchase_rate()
+			self.update_item_price_in_price()
 
 
 	def update_rate_in_serial_no(self, receipt_document):
@@ -148,6 +153,30 @@ class LandedCostVoucher(Document):
 					frappe.db.sql("update `tabSerial No` set purchase_rate=%s where name in ({0})"
 						.format(", ".join(["%s"]*len(serial_nos))), tuple([item.valuation_rate] + serial_nos))
 
+
+
+	#OWN SCRIPTS
 	def update_last_purchase_rate(self):
 		for item in self.items:
-			frappe.db.sql("UPDATE `tabPurchase Order Item` SET last_purchase_rate =  WHERE ",(item['updated_rate']),as_dict=True)
+			item = item.as_dict()
+			print("BUANNGGGG")
+			print(item)
+			try:
+				frappe.db.sql("UPDATE `tabItem` SET last_purchase_rate = %s WHERE name = %s",(item['updated_rate'],item['item_code']),as_dict=True)
+
+				frappe.msgprint("All good")
+			except:
+				frappe.throw("Er")
+	def update_item_price_in_price(self):
+		for item in self.items:
+			item = item.as_dict()
+			print("BUANNGGGG Update sa PR")
+			print(item)
+			try:
+				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s WHERE parent = %s",(item['updated_rate'],item['receipt_document']),as_dict=True)
+				po_number = frappe.db.sql("SELECT po_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
+				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s WHERE parent = %s",
+							  (item['updated_rate'], po_number[0]['po_number']), as_dict=True)
+				frappe.msgprint("All good")
+			except:
+				frappe.throw("Er")
