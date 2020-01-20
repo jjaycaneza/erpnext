@@ -33,6 +33,8 @@ class EmployeeAdvance(Document):
 				self.status = "Paid"
 			elif self.employee_advance_fund_source != 'Not Applicable' and self.advance_amount == flt(self.paid_amount):
 				self.status = "Unliquidated"
+			elif self.claimed_amount and (flt(self.claimed_amount) + flt(self.returned_money)) == flt(self.paid_amount):
+				self.status = "Liquidated"
 			else:
 				self.status = "Unpaid"
 		elif self.docstatus == 2:
@@ -93,9 +95,6 @@ class EmployeeAdvance(Document):
 				AND eca.allocated_amount > 0
 				AND ec.is_return_ca = 1
 		""", self.name)[0][0] or 0
-
-		print("++++++++returened++++++++++++++++++++")
-		print(money_returned)
 
 		frappe.db.set_value("Employee Advance", self.name, "returned_money", flt(money_returned))
 		self.reload()
