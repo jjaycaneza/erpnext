@@ -9,7 +9,7 @@ frappe.listview_settings['Purchase Order'] = {
 		} else if (doc.status === "Delivered") {
 			return [__("Delivered"), "green", "status,=,Closed"];
 		} else if (flt(doc.per_received, 2) < 100 && doc.status !== "Closed") {
-			if (flt(doc.per_billed, 2) < 100 && doc.has_pilferage_or_underservedd==0) {
+			if (flt(doc.per_billed, 2) < 100 && doc.has_pilferage_or_underserved==0) {
 				return [__("To Receive and Bill"), "orange",
 					"per_received,<,100|per_billed,<,100|status,!=,Closed"];
 			} else {
