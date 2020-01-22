@@ -79,8 +79,38 @@ class StockEntry(StockController):
 		self.calculate_rate_and_amount(update_finished_item_rate=False)
 
 	def on_submit(self):
+		if self.purpose == "Receive at Warehouse":
 
-		self.update_stock_ledger()
+			frappe.db.sql("UPDATE `tabStock Entry` SET per_transferred = 100 WHERE name=%s", self.name, as_dict=True)
+			print(self.as_dict())
+			# doc = frappe.get_doc({
+			# 	'doctype':"GL Entry",
+			# 	'account':,
+			# 	'cost_center':self.cost_center,
+			# 	'debit':,
+			# 	'credit':,
+			# 	'account_currency':'PHP',
+			# 	'debit_in_account_currency':,
+			# 	'credit_in_account_currency':,
+			# 	'against':,
+			# 	'voucher_type':'Stock Entry',
+			# 	'voucher_no':self.name,
+			# 	'remarks':'Accounting Entry for Stock',
+			# 	'is_opening':'No',
+			# 	'is_advance':'No',
+			# 	# 'fiscal_year':,
+			# 	'company':'Gaisano',
+			# 	'branch':self.branch,
+			# 	'business_units':self.business_units
+			# })
+
+		else:
+
+			self.update_stock_ledger()
+
+
+
+		# self.update_stock_ledger()
 
 		update_serial_nos_after_submit(self, "items")
 		self.update_work_order()
