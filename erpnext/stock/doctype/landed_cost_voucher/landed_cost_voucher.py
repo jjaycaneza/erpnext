@@ -105,6 +105,7 @@ class LandedCostVoucher(Document):
 		self.update_landed_cost()
 
 	def on_cancel(self):
+		self.update_back_to_zero()
 		self.update_landed_cost()
 
 	def update_landed_cost(self):
@@ -137,12 +138,15 @@ class LandedCostVoucher(Document):
 			doc.docstatus = 1
 
 
-			doc.expense_account_custom = "Hiiiiii"
+
 
 			doc.update_stock_ledger(via_landed_cost_voucher=True)
 			doc.make_gl_entries()
+
+			# print(doc.as_dict())
 			self.update_last_purchase_rate()
-			self.update_item_price_in_price()
+			self.update_item_price_in_pr_po()
+
 
 
 	def update_rate_in_serial_no(self, receipt_document):
@@ -159,24 +163,37 @@ class LandedCostVoucher(Document):
 	def update_last_purchase_rate(self):
 		for item in self.items:
 			item = item.as_dict()
-			print("BUANNGGGG")
-			print(item)
+
+
 			try:
 				frappe.db.sql("UPDATE `tabItem` SET last_purchase_rate = %s WHERE name = %s",(item['updated_rate'],item['item_code']),as_dict=True)
 
-				frappe.msgprint("All good")
+
 			except:
-				frappe.throw("Er")
-	def update_item_price_in_price(self):
+				frappe.throw("Last Purchase Rate not Updated")
+	def update_item_price_in_pr_po(self):
 		for item in self.items:
 			item = item.as_dict()
-			print("BUANNGGGG Update sa PR")
-			print(item)
 			try:
-				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s WHERE parent = %s",(item['updated_rate'],item['receipt_document']),as_dict=True)
+				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document']),as_dict=True)
 				po_number = frappe.db.sql("SELECT po_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
-				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s WHERE parent = %s",
-							  (item['updated_rate'], po_number[0]['po_number']), as_dict=True)
-				frappe.msgprint("All good")
+				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number']), as_dict=True)
+				so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
+				dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
+				print(so_code)
+				frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'], item['updated_rate'], so_code[0]['name']), as_dict=True)
+				frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'], item['updated_rate'], dn_code[0]['name']), as_dict=True)
+
+
 			except:
-				frappe.throw("Er")
+				frappe.throw("Item Price not update")
+	def update_back_to_zero(self):
+		for i in range(len(self.items)):
+			self.items[i].updated_rate = 0
+
+
+
+
