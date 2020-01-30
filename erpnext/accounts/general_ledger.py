@@ -249,7 +249,7 @@ def delete_gl_entries(gl_entries=None, voucher_type=None, voucher_no=None,
 
 	from erpnext.accounts.doctype.gl_entry.gl_entry import validate_balance_type, \
 		check_freezing_date, update_outstanding_amt, validate_frozen_account
-
+	
 	if not gl_entries:
 		gl_entries = frappe.db.sql("""
 			select account, posting_date, party_type, party, cost_center, fiscal_year,voucher_type,
@@ -272,3 +272,4 @@ def delete_gl_entries(gl_entries=None, voucher_type=None, voucher_no=None,
 		if entry.get("against_voucher") and update_outstanding == 'Yes' and not adv_adj:
 			update_outstanding_amt(entry["account"], entry.get("party_type"), entry.get("party"), entry.get("against_voucher_type"),
 				entry.get("against_voucher"), on_cancel=True)
+
