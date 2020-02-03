@@ -17,10 +17,15 @@ class ReceivablePayableReport(object):
 
 	def run(self, args):
 		party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
-		columns = self.get_columns(party_naming_by, args)
-		data = self.get_data(party_naming_by, args)
-		chart = self.get_chart_data(columns, data)
-		return columns, data, None, chart
+		if self.filters.from_expense_claim == 1:
+			columns = self.get_columns(party_naming_by, args)
+			data = self.get_exp_clm_data()
+			return columns, data
+		else:
+			columns = self.get_columns(party_naming_by, args)
+			data = self.get_data(party_naming_by, args)
+			chart = self.get_chart_data(columns, data)
+			return columns, data, None, chart
 
 	def get_columns(self, party_naming_by, args):
 		columns = []
@@ -631,10 +636,50 @@ class ReceivablePayableReport(object):
 			"type": 'percentage'
 		}
 
+	######### EXPENSE CLAIM PAYABLE
+	def get_exp_clm_data(self):
+		data = []
+		exp_clm_gl_entry = frappe.db.sql("""SELECT DISTINCT voucher_no, posting_date
+				FROM `tabGL Entry`
+				WHERE account = '2006 - Accounts Payable ~ Fresh - G' and voucher_type = 'Expense Claim' order by creation desc 
+			""", as_dict=True)
+
+		for gl in exp_clm_gl_entry:
+			expense_detail_query = """
+						SELECT supplier, amount, sanctioned_amount
+						FROM `tabExpense Claim Detail` WHERE parent=%s
+					"""
+			expense_detail = frappe.db.sql(expense_detail_query, gl['voucher_no'], as_dict=1)
+
+			for exp_detail in expense_detail:
+				data.append({
+					"posting_date": gl['posting_date'],
+					"Supplier": exp_detail['supplier'],
+					"Supplier Name": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_name"),
+					"voucher_type": "Expense Claim",
+					"voucher_no": gl['voucher_no'],
+					"invoiced_amount": exp_detail['amount'],
+					"paid_amount": exp_detail['sanctioned_amount'],
+					"outstanding_amount": exp_detail['sanctioned_amount'],
+					"Supplier Group": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_group"),
+					"remaining_balance": exp_detail['sanctioned_amount'],
+					"debit_note": float(0),
+					"0-30": float(0),
+					"31-60": float(0),
+					"61-90": float(0),
+					"91-120": float(0),
+					"121-Above": float(0),
+					"currency": "PHP",
+					"pdc/lc_amount": float(0),
+				})
+
+		return data
+
 def execute(filters=None):
 	args = {
 		"party_type": "Customer",
 		"naming_by": ["Selling Settings", "cust_master_name"],
+		"from_expense_claim": False,
 	}
 	return ReceivablePayableReport(filters).run(args)
 
