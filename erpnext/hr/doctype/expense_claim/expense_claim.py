@@ -130,18 +130,36 @@ class ExpenseClaim(AccountsController):
 
 		# expense entries
 		for data in self.expenses:
-			gl_entry.append(
-				self.get_gl_dict({
-					"account": data.default_account,
-					"debit": data.sanctioned_amount,
-					"debit_in_account_currency": data.sanctioned_amount,
-					"against": self.employee,
-					"cost_center": self.cost_center,
-					"memo_1": data.memo_1,
-					"memo_2": data.memo_2,
-					"memo_3": data.memo_3,
-				})
-			)
+			if self.is_purchase_or_payment_inventory == 1:
+				gl_entry.append(
+					self.get_gl_dict({
+						"account": data.default_account,
+						"debit": data.sanctioned_amount,
+						"debit_in_account_currency": data.sanctioned_amount,
+						"against": self.employee,
+						"cost_center": self.cost_center,
+						"memo_1": data.memo_1,
+						"memo_2": data.memo_2,
+						"memo_3": data.memo_3,
+						"party_type": "Supplier",
+						"party": data.supplier,
+						"against_voucher_type": self.doctype,
+						"against_voucher": self.name,
+					})
+				)
+			else:
+				gl_entry.append(
+					self.get_gl_dict({
+						"account": data.default_account,
+						"debit": data.sanctioned_amount,
+						"debit_in_account_currency": data.sanctioned_amount,
+						"against": self.employee,
+						"cost_center": self.cost_center,
+						"memo_1": data.memo_1,
+						"memo_2": data.memo_2,
+						"memo_3": data.memo_3,
+					})
+				)
 
 		for data in self.advances:
 			gl_entry.append(
@@ -183,6 +201,7 @@ class ExpenseClaim(AccountsController):
 				})
 			)
 
+		print(gl_entry)
 		return gl_entry
 
 	def add_tax_gl_entries(self, gl_entries):
