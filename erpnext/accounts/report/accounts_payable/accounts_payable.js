@@ -105,6 +105,11 @@ frappe.query_reports["Accounts Payable"] = {
 			"label": __("Tax Id"),
 			"fieldtype": "Data",
 			"hidden": 1
+		},
+		{
+			"fieldname":"from_expense_claim",
+			"label": __("From Expense Claim"),
+			"fieldtype": "Check",
 		}
 	],
 	onload: function(report) {
