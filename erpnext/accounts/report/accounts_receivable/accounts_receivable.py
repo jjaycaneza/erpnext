@@ -639,39 +639,44 @@ class ReceivablePayableReport(object):
 	######### EXPENSE CLAIM PAYABLE
 	def get_exp_clm_data(self):
 		data = []
-		exp_clm_gl_entry = frappe.db.sql("""SELECT DISTINCT voucher_no, posting_date
-				FROM `tabGL Entry`
+		exp_clm_gl_entry = frappe.db.sql("""SELECT DISTINCT voucher_no FROM `tabGL Entry`
 				WHERE account = '2006 - Accounts Payable ~ Fresh - G' and voucher_type = 'Expense Claim' order by creation desc 
 			""", as_dict=True)
 
 		for gl in exp_clm_gl_entry:
-			expense_detail_query = """
-						SELECT supplier, amount, sanctioned_amount
-						FROM `tabExpense Claim Detail` WHERE parent=%s
-					"""
-			expense_detail = frappe.db.sql(expense_detail_query, gl['voucher_no'], as_dict=1)
+			expense_claim = frappe.db.sql("""
+							SELECT DISTINCT name, status, posting_date FROM `tabExpense Claim` 
+							where status='Paid' and name=%s
+						""", gl['voucher_no'], as_dict=True)
 
-			for exp_detail in expense_detail:
-				data.append({
-					"posting_date": gl['posting_date'],
-					"Supplier": exp_detail['supplier'],
-					"Supplier Name": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_name"),
-					"voucher_type": "Expense Claim",
-					"voucher_no": gl['voucher_no'],
-					"invoiced_amount": exp_detail['amount'],
-					"paid_amount": exp_detail['sanctioned_amount'],
-					"outstanding_amount": exp_detail['sanctioned_amount'],
-					"Supplier Group": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_group"),
-					"remaining_balance": exp_detail['sanctioned_amount'],
-					"debit_note": float(0),
-					"0-30": float(0),
-					"31-60": float(0),
-					"61-90": float(0),
-					"91-120": float(0),
-					"121-Above": float(0),
-					"currency": "PHP",
-					"pdc/lc_amount": float(0),
-				})
+			for exp_claim in expense_claim:
+				expense_detail_query = """
+							SELECT supplier, amount, sanctioned_amount
+							FROM `tabExpense Claim Detail` WHERE parent=%s
+						"""
+				expense_detail = frappe.db.sql(expense_detail_query, exp_claim['name'], as_dict=1)
+
+				for exp_detail in expense_detail:
+					data.append({
+						"posting_date": exp_claim['posting_date'],
+						"Supplier": exp_detail['supplier'],
+						"Supplier Name": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_name"),
+						"voucher_type": "Expense Claim",
+						"voucher_no": exp_claim['name'],
+						"invoiced_amount": exp_detail['amount'],
+						"paid_amount": exp_detail['sanctioned_amount'],
+						"outstanding_amount": exp_detail['sanctioned_amount'],
+						"Supplier Group": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_group"),
+						"remaining_balance": exp_detail['sanctioned_amount'],
+						"debit_note": float(0),
+						"0-30": float(0),
+						"31-60": float(0),
+						"61-90": float(0),
+						"91-120": float(0),
+						"121-Above": float(0),
+						"currency": "PHP",
+						"pdc/lc_amount": float(0),
+					})
 
 		return data
 
