@@ -46,8 +46,10 @@ class ExpenseClaim(AccountsController):
 		precision = self.precision("total_sanctioned_amount")
 		if (self.is_paid or (flt(self.total_sanctioned_amount) > 0
 			and flt(self.total_sanctioned_amount, precision) ==  flt(paid_amount, precision))) \
-			and self.docstatus == 1 and self.approval_status == 'Approved':
+			and self.docstatus == 1 and self.approval_status == 'Approved' and self.is_return_ca == 0:
 				self.status = "Paid"
+		elif flt(self.total_return) > 0 and self.docstatus == 1 and self.approval_status == 'Approved' and self.is_return_ca == 1:
+			self.status = "Return"
 		elif flt(self.total_sanctioned_amount) > 0 and self.docstatus == 1 and self.approval_status == 'Approved':
 			self.status = "Unpaid"
 		elif self.docstatus == 1 and self.approval_status == 'Rejected':
@@ -215,9 +217,12 @@ class ExpenseClaim(AccountsController):
 		for d in self.get('expenses'):
 			if self.approval_status == 'Rejected':
 				d.sanctioned_amount = 0.0
+			if self.is_return_ca == 0:
+				self.total_claimed_amount += flt(d.amount)
+				self.total_sanctioned_amount += flt(d.sanctioned_amount)
+			else:
+				pass
 
-			self.total_claimed_amount += flt(d.amount)
-			self.total_sanctioned_amount += flt(d.sanctioned_amount)
 
 	def calculate_taxes(self):
 		self.total_taxes_and_charges = 0
@@ -239,22 +244,30 @@ class ExpenseClaim(AccountsController):
 		self.total_advance_amount = 0
 		for d in self.get("advances"):
 			ref_doc = frappe.db.get_value("Employee Advance", d.employee_advance,
-				["posting_date", "paid_amount", "claimed_amount", "advance_account"], as_dict=1)
+				["posting_date", "paid_amount", "claimed_amount", "advance_account", "returned_money"], as_dict=1)
 			d.posting_date = ref_doc.posting_date
 			d.advance_account = ref_doc.advance_account
 			d.advance_paid = ref_doc.paid_amount
-			d.unclaimed_amount = flt(ref_doc.paid_amount) - flt(ref_doc.claimed_amount)
+			d.unclaimed_amount = flt(ref_doc.paid_amount) - (flt(ref_doc.claimed_amount) + flt(ref_doc.returned_money))
 
-			if d.allocated_amount and flt(d.allocated_amount) > flt(d.unclaimed_amount):
+			if d.allocated_amount and flt(d.allocated_amount) > (flt(d.unclaimed_amount + flt(ref_doc.returned_money))):
 				frappe.throw(_("Row {0}# Allocated amount {1} cannot be greater than unclaimed amount {2}")
 					.format(d.idx, d.allocated_amount, d.unclaimed_amount))
 
-			self.total_advance_amount += flt(d.allocated_amount)
+			if self.is_return_ca == 0:
+				self.total_advance_amount += flt(d.allocated_amount)
+			else:
+				pass
 
 		if self.total_advance_amount:
 			precision = self.precision("total_advance_amount")
 			if flt(self.total_advance_amount, precision) > flt(self.total_claimed_amount, precision):
-				frappe.throw(_("Total advance amount cannot be greater than total claimed amount"))
+				if self.is_return_ca == 0:
+					frappe.throw(_("Total advance amount cannot be greater than total claimed amount"))
+				else:
+					pass
+
+
 			if self.total_sanctioned_amount \
 					and flt(self.total_advance_amount, precision) > flt(self.total_sanctioned_amount, precision):
 				frappe.throw(_("Total advance amount cannot be greater than total sanctioned amount"))
@@ -333,13 +346,13 @@ def get_expense_claim_account(expense_claim_type, company):
 @frappe.whitelist()
 def get_advances(employee, advance_id=None):
 	if not advance_id:
-		condition = 'docstatus=1 and employee={0} and paid_amount > 0 and paid_amount > claimed_amount'.format(frappe.db.escape(employee))
+		condition = 'docstatus=1 and employee={0} and paid_amount > 0 and paid_amount > (claimed_amount + returned_money)'.format(frappe.db.escape(employee))
 	else:
 		condition = 'name={0}'.format(frappe.db.escape(advance_id))
 
 	return frappe.db.sql("""
 		select
-			name, posting_date, paid_amount, claimed_amount, advance_account, outstanding_cash_advance
+			name, posting_date, paid_amount, claimed_amount, advance_account, outstanding_cash_advance, returned_money
 		from
 			`tabEmployee Advance`
 		where {0}
@@ -357,7 +370,7 @@ def get_expense_claim(
 	expense_claim.employee = employee_name
 	expense_claim.payable_account = default_payable_account
 	expense_claim.expense_claim_fund_source = expense_claim_fund_source
-	expense_claim.total_unclaimed = flt(paid_amount) - flt(claimed_amount)
+	expense_claim.total_unclaimed = flt(paid_amount) - (flt(claimed_amount) + flt(returned_money))
 	expense_claim.branch = branch
 	expense_claim.business_units = business_units
 	expense_claim.cost_center = default_cost_center
@@ -368,8 +381,8 @@ def get_expense_claim(
 			'employee_advance': employee_advance_name,
 			'posting_date': posting_date,
 			'advance_paid': flt(paid_amount),
-			'unclaimed_amount': flt(paid_amount) - ((flt(claimed_amount) + flt(returned_money))),
-			'allocated_amount': flt(paid_amount) - flt(claimed_amount)
+			'unclaimed_amount': flt(paid_amount) - (flt(claimed_amount) + flt(returned_money)),
+			'allocated_amount': flt(paid_amount) - (flt(claimed_amount) + flt(returned_money))
 		}
 	)
 

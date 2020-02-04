@@ -108,10 +108,21 @@ cur_frm.cscript.validate = function(doc) {
 cur_frm.cscript.calculate_total = function(doc){
 	doc.total_claimed_amount = 0;
 	doc.total_sanctioned_amount = 0;
-	$.each((doc.expenses || []), function(i, d) {
-		doc.total_claimed_amount += d.amount;
-		doc.total_sanctioned_amount += d.sanctioned_amount;
-	});
+	doc.total_return = 0;
+
+        $.each((doc.expenses || []), function (i, d) {
+        	if (cur_frm.doc.is_return_ca == 0) {
+                doc.total_claimed_amount += d.amount;
+                doc.total_sanctioned_amount += d.sanctioned_amount;
+            }
+            else {
+        		doc.total_return += d.amount;
+			}
+
+        });
+
+
+
 };
 
 cur_frm.cscript.calculate_total_amount = function(doc,cdt,cdn){
@@ -203,9 +214,9 @@ frappe.ui.form.on("Expense Claim", {
 	},
 
 	calculate_grand_total: function(frm) {
-		var grand_total = flt(frm.doc.total_sanctioned_amount) + flt(frm.doc.total_taxes_and_charges) - flt(frm.doc.total_advance_amount);
-		frm.set_value("grand_total", grand_total);
-		frm.refresh_fields();
+            var grand_total = flt(frm.doc.total_sanctioned_amount) + flt(frm.doc.total_taxes_and_charges) - flt(frm.doc.total_advance_amount);
+            frm.set_value("grand_total", grand_total);
+            frm.refresh_fields();
 	},
 
 	make_payment_entry: function(frm) {
@@ -299,8 +310,8 @@ frappe.ui.form.on("Expense Claim", {
 							row.posting_date = d.posting_date;
 							row.advance_account = d.advance_account;
 							row.advance_paid = d.paid_amount;
-							row.unclaimed_amount = flt(d.paid_amount) - flt(d.claimed_amount);
-							row.allocated_amount = flt(d.paid_amount) - flt(d.claimed_amount);
+							row.unclaimed_amount = flt(d.paid_amount) - (flt(d.claimed_amount) + flt(d.returned_money));
+							row.allocated_amount = flt(d.paid_amount) - (flt(d.claimed_amount) + flt(d.returned_money));
 						});
 						refresh_field("advances");
 					}
@@ -312,10 +323,11 @@ frappe.ui.form.on("Expense Claim", {
 
 frappe.ui.form.on("Expense Claim Detail", {
 	amount: function(frm, cdt, cdn) {
-		var child = locals[cdt][cdn];
-		var doc = frm.doc;
-		frappe.model.set_value(cdt, cdn, 'sanctioned_amount', child.amount);
-		cur_frm.cscript.calculate_total(doc,cdt,cdn);
+			var child = locals[cdt][cdn];
+			var doc = frm.doc;
+			frappe.model.set_value(cdt, cdn, 'sanctioned_amount', child.amount);
+			cur_frm.cscript.calculate_total(doc,cdt,cdn);
+
 	},
 
 	sanctioned_amount: function(frm, cdt, cdn) {

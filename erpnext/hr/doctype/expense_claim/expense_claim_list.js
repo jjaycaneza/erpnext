@@ -7,6 +7,13 @@ frappe.listview_settings['Expense Claim'] = {
 			return [__("Unpaid"), "orange"];
 		} else if(doc.status == "Rejected") {
 			return [__("Rejected"), "grey"];
+		} else if(doc.status == "Return") {
+			return [__("Return"), "red"];
+		} else if(doc.status == "Paid and Batched") {
+			return [__("Paid and Batched"), "green"];
+		} else if(doc.status == "Replenished") {
+			return [__("Replenished"), "green"];
 		}
+
 	}
 };
