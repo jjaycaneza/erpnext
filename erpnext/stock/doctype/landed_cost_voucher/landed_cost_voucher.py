@@ -15,7 +15,7 @@ class LandedCostVoucher(Document):
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
 				pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
-					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center
+					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center,pr_item.business_units,pr_item.branch,pr_item.cost_center
 					from `tab{doctype} Item` pr_item where parent = %s
 					and exists(select name from tabItem where name = pr_item.item_code and is_stock_item = 1)
 					""".format(doctype=pr.receipt_document_type), pr.receipt_document, as_dict=True)
@@ -32,15 +32,20 @@ class LandedCostVoucher(Document):
 					item.receipt_document_type = pr.receipt_document_type
 					item.receipt_document = pr.receipt_document
 					item.purchase_receipt_item = d.name
+					item.business_units = d.business_units
+					item.branch = d.branch
+					item.cost_center = d.cost_center
 
 	def validate(self):
 		self.check_mandatory()
 		self.validate_purchase_receipts()
-		self.set_total_taxes_and_charges()
+		# self.set_total_taxes_and_charges()
 		if not self.get("items"):
 			self.get_items_from_purchase_receipts()
 		else:
+			#WILL BE CHANGED CAUSE WILL BASE ON APPLICABLE CHARGES AND NOT TAX AND CHARGES
 			self.validate_applicable_charges_for_item()
+
 
 	def check_mandatory(self):
 		if not self.get("purchase_receipts"):
@@ -71,25 +76,28 @@ class LandedCostVoucher(Document):
 		self.total_taxes_and_charges = sum([flt(d.amount) for d in self.get("taxes")])
 
 	def validate_applicable_charges_for_item(self):
-		based_on = self.distribute_charges_based_on.lower()
-
-		total = sum([flt(d.get(based_on)) for d in self.get("items")])
-
-		if not total:
-			frappe.throw(_("Total {0} for all items is zero, may be you should change 'Distribute Charges Based On'").format(based_on))
-
-		total_applicable_charges = sum([flt(d.applicable_charges) for d in self.get("items")])
-
-		precision = get_field_precision(frappe.get_meta("Landed Cost Item").get_field("applicable_charges"),
-		currency=frappe.get_cached_value('Company',  self.company,  "default_currency"))
-
-		diff = flt(self.total_taxes_and_charges) - flt(total_applicable_charges)
-		diff = flt(diff, precision)
-
-		if abs(diff) < (2.0 / (10**precision)):
-			self.items[-1].applicable_charges += diff
+		if (self.landed_cost_voucher_type == "Update Fresh Goods Price"):
+			pass
 		else:
-			frappe.throw(_("Total Applicable Charges in Purchase Receipt Items table must be same as Total Taxes and Charges"))
+			based_on = self.distribute_charges_based_on.lower()
+
+			total = sum([flt(d.get(based_on)) for d in self.get("items")])
+
+			if not total:
+				frappe.throw(_("Total {0} for all items is zero, may be you should change 'Distribute Charges Based On'").format(based_on))
+
+			total_applicable_charges = sum([flt(d.applicable_charges) for d in self.get("items")])
+
+			precision = get_field_precision(frappe.get_meta("Landed Cost Item").get_field("applicable_charges"),
+			currency=frappe.get_cached_value('Company',  self.company,  "default_currency"))
+
+			diff = flt(self.total_taxes_and_charges) - flt(total_applicable_charges)
+			diff = flt(diff, precision)
+
+			if abs(diff) < (2.0 / (10**precision)):
+				self.items[-1].applicable_charges += diff
+			else:
+				frappe.throw(_("Total Applicable Charges in Purchase Receipt Items table must be same as Total Taxes and Charges"))
 
 
 
@@ -97,6 +105,7 @@ class LandedCostVoucher(Document):
 		self.update_landed_cost()
 
 	def on_cancel(self):
+		self.update_back_to_zero()
 		self.update_landed_cost()
 
 	def update_landed_cost(self):
@@ -115,17 +124,30 @@ class LandedCostVoucher(Document):
 
 			# update latest valuation rate in serial no
 			self.update_rate_in_serial_no(doc)
-
+			
 			# update stock & gl entries for cancelled state of PR
 			doc.docstatus = 2
+
+
 			doc.update_stock_ledger(allow_negative_stock=True, via_landed_cost_voucher=True)
+
 			doc.make_gl_entries_on_cancel(repost_future_gle=False)
 
 
 			# update stock & gl entries for submit state of PR
 			doc.docstatus = 1
+
+
+
+
 			doc.update_stock_ledger(via_landed_cost_voucher=True)
 			doc.make_gl_entries()
+
+			# print(doc.as_dict())
+			self.update_last_purchase_rate()
+			dn_list = self.update_item_price_in_pr_po()
+
+
 
 	def update_rate_in_serial_no(self, receipt_document):
 		for item in receipt_document.get("items"):
@@ -134,3 +156,49 @@ class LandedCostVoucher(Document):
 				if serial_nos:
 					frappe.db.sql("update `tabSerial No` set purchase_rate=%s where name in ({0})"
 						.format(", ".join(["%s"]*len(serial_nos))), tuple([item.valuation_rate] + serial_nos))
+
+
+
+	#OWN SCRIPTS
+	def update_last_purchase_rate(self):
+		for item in self.items:
+			item = item.as_dict()
+
+
+			try:
+				frappe.db.sql("UPDATE `tabItem` SET last_purchase_rate = %s WHERE name = %s",(item['updated_rate'],item['item_code']),as_dict=True)
+
+
+			except:
+				frappe.throw("Last Purchase Rate not Updated")
+	def update_item_price_in_pr_po(self):
+		dn_list = []
+		for item in self.items:
+			item = item.as_dict()
+			try:
+				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document']),as_dict=True)
+				po_number = frappe.db.sql("SELECT po_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
+				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number']), as_dict=True)
+				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Order` WHERE name = %s",(po_number[0]['po_number']),as_dict=True)
+
+				if document_type[0]['document_type'] == "Inventory Transfer - Fresh":
+
+					so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
+					dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
+
+					frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'], item['updated_rate'], so_code[0]['name']), as_dict=True)
+					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
+							  (item['updated_rate'], item['updated_rate'], dn_code[0]['name']), as_dict=True)
+					dn_list.append( dn_code[0]['name'])
+
+			except:
+				frappe.throw("Item Price not updated	")
+		return dn_list
+	def update_back_to_zero(self):
+		for i in range(len(self.items)):
+			self.items[i].updated_rate = 0
+
+
+

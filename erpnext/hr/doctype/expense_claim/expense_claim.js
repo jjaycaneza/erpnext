@@ -118,11 +118,7 @@ cur_frm.cscript.calculate_total = function(doc){
             else {
         		doc.total_return += d.amount;
 			}
-
         });
-
-
-
 };
 
 cur_frm.cscript.calculate_total_amount = function(doc,cdt,cdn){
@@ -327,7 +323,6 @@ frappe.ui.form.on("Expense Claim Detail", {
 			var doc = frm.doc;
 			frappe.model.set_value(cdt, cdn, 'sanctioned_amount', child.amount);
 			cur_frm.cscript.calculate_total(doc,cdt,cdn);
-
 	},
 
 	sanctioned_amount: function(frm, cdt, cdn) {

@@ -130,7 +130,7 @@ erpnext.buying.PurchaseOrderController = erpnext.buying.BuyingController.extend(
 			}
 			if(doc.status != "Closed") {
 				if (doc.status != "On Hold") {
-					if(flt(doc.per_received, 2) < 100 && allow_receipt) {
+					if(flt(doc.per_received, 2) < 100 && allow_receipt && cur_frm.doc.has_pilferage_or_underserved == 0) {
 						cur_frm.add_custom_button(__('Receipt'), this.make_purchase_receipt, __('Create'));
 						if(doc.is_subcontracted==="Yes") {
 							cur_frm.add_custom_button(__('Material to Supplier'),

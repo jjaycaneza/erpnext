@@ -14,16 +14,19 @@ class ClosedAccountingPeriod(frappe.ValidationError): pass
 class StockAccountInvalidTransaction(frappe.ValidationError): pass
 
 def make_gl_entries(gl_map, cancel=False, adv_adj=False, merge_entries=True, update_outstanding='Yes', from_repost=False):
+
 	if gl_map:
 		if not cancel:
 			validate_accounting_period(gl_map)
 			gl_map = process_gl_map(gl_map, merge_entries)
 			if gl_map and len(gl_map) > 1:
+
 				save_entries(gl_map, adv_adj, update_outstanding, from_repost)
 			else:
 				frappe.throw(_("Incorrect number of General Ledger Entries found. You might have selected a wrong Account in the transaction."))
 		else:
 			delete_gl_entries(gl_map, adv_adj=adv_adj, update_outstanding=update_outstanding)
+
 
 def validate_accounting_period(gl_map):
 	accounting_periods = frappe.db.sql(""" SELECT
@@ -47,6 +50,7 @@ def validate_accounting_period(gl_map):
 			.format(accounting_periods[0].name), ClosedAccountingPeriod)
 
 def process_gl_map(gl_map, merge_entries=True):
+
 	if merge_entries:
 		gl_map = merge_similar_entries(gl_map)
 	for entry in gl_map:
@@ -114,6 +118,7 @@ def check_if_in_list(gle, gl_map, dimensions=None):
 			return e
 
 def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
+
 	if not from_repost:
 		validate_account_for_perpetual_inventory(gl_map)
 		validate_cwip_accounts(gl_map)
@@ -121,6 +126,7 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 	round_off_debit_credit(gl_map)
 
 	for entry in gl_map:
+
 		make_entry(entry, adv_adj, update_outstanding, from_repost)
 
 		# check against budget
@@ -128,6 +134,14 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 			validate_expense_against_budget(entry)
 
 def make_entry(args, adv_adj, update_outstanding, from_repost=False):
+
+	pr_with_lcv = frappe.db.sql("SELECT receipt_document FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1")
+	pr_with_lcv  = [item for t in pr_with_lcv for item in t]
+
+	if args.voucher_no in pr_with_lcv:
+		if args.account == "5039 - Cost of Sales 2 - G":
+			args.account = "2003 - Accounts Payable ~ Temporary Stock - G"
+
 	args.update({"doctype": "GL Entry"})
 	gle = frappe.get_doc(args)
 	gle.flags.ignore_permissions = 1
@@ -235,7 +249,7 @@ def delete_gl_entries(gl_entries=None, voucher_type=None, voucher_no=None,
 
 	from erpnext.accounts.doctype.gl_entry.gl_entry import validate_balance_type, \
 		check_freezing_date, update_outstanding_amt, validate_frozen_account
-
+	
 	if not gl_entries:
 		gl_entries = frappe.db.sql("""
 			select account, posting_date, party_type, party, cost_center, fiscal_year,voucher_type,
@@ -258,3 +272,4 @@ def delete_gl_entries(gl_entries=None, voucher_type=None, voucher_no=None,
 		if entry.get("against_voucher") and update_outstanding == 'Yes' and not adv_adj:
 			update_outstanding_amt(entry["account"], entry.get("party_type"), entry.get("party"), entry.get("against_voucher_type"),
 				entry.get("against_voucher"), on_cancel=True)
+

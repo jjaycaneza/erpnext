@@ -228,7 +228,7 @@ class Subscription(Document):
 		saves the `Subscription`.
 		"""
 		invoice = self.create_invoice(prorate)
-		self.append('invoices', {'invoice': invoice.name})
+		self.append('invoices', {'invoice': invoice.name, 'period': invoice.posting_date, 'amount': invoice.grand_total, 'status': invoice.status})
 		self.save()
 
 		return invoice
@@ -241,6 +241,7 @@ class Subscription(Document):
 		invoice.set_posting_time = 1
 		invoice.posting_date = self.current_invoice_start
 		invoice.customer = self.customer
+		invoice.subscription = self.name
 
 		## Add dimesnions in invoice for subscription:
 		accounting_dimensions = get_accounting_dimensions()

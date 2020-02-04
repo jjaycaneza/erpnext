@@ -55,7 +55,8 @@ class PaymentEntry(AccountsController):
 		self.set_amounts()
 		self.clear_unallocated_reference_document_rows()
 		self.validate_payment_against_negative_invoice()
-		self.validate_transaction_reference()
+		# remove cheque no and date validation
+		# self.validate_transaction_reference()
 		self.set_title()
 		self.set_remarks()
 		self.validate_duplicate_entry()
@@ -70,7 +71,8 @@ class PaymentEntry(AccountsController):
 		self.update_outstanding_amounts()
 		self.update_advance_paid()
 		self.update_expense_claim()
-
+		# replace cheque no and date validation
+		# self.validate_transaction_reference()
 
 	def on_cancel(self):
 		self.setup_party_account_field()
@@ -407,6 +409,7 @@ class PaymentEntry(AccountsController):
 				remarks.append(_("Amount {0} {1} deducted against {2}")
 					.format(self.company_currency, d.amount, d.account))
 
+		print (remarks)
 		self.set("remarks", "\n".join(remarks))
 
 	def make_gl_entries(self, cancel=0, adv_adj=0):
