@@ -136,7 +136,7 @@ class SalesInvoice(SellingController):
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
 
-		if self.subscription:
+		if self.subscription and not self.is_new():
 			self.update_subscription_status(self.status)
 
 
