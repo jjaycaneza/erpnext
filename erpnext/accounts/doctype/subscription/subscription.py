@@ -242,6 +242,14 @@ class Subscription(Document):
 		invoice.posting_date = self.current_invoice_start
 		invoice.customer = self.customer
 		invoice.subscription = self.name
+		invoice.document_type = "Leasing"
+		invoice.cusa = self.cusa
+		invoice.electricity = self.electricity
+		invoice.fogging = self.fogging
+		invoice.cusa_total_amount = self.cusa_total_amount
+		invoice.electricity_total_amount = self.electricity_total_amount
+		invoice.fogging_total_amount = self.fogging_total_amount
+		invoice.total_subscription_amount = self.cusa_total_amount+self.electricity_total_amount+self.fogging_total_amount
 
 		## Add dimesnions in invoice for subscription:
 		accounting_dimensions = get_accounting_dimensions()
