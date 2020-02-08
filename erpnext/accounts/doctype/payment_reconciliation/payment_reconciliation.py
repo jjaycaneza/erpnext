@@ -214,6 +214,7 @@ class PaymentReconciliation(Document):
 			gl_doc.db_set("against_voucher_type", "Purchase Invoice", update_modified = True)
 			gl_doc.db_set("against_voucher", invoice_no, update_modified = True)
 
+
 	def get_payment_details(self, row, dr_or_cr):
 		return frappe._dict({
 			'voucher_type': row.reference_type,
