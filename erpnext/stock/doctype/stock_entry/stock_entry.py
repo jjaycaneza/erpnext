@@ -106,11 +106,6 @@ class StockEntry(StockController):
 
 			self.update_stock_ledger()
 
-
-
-
-
-
 		# self.update_stock_ledger()
 
 		update_serial_nos_after_submit(self, "items")

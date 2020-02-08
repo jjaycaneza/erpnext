@@ -4,6 +4,19 @@
 // Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
+//Highlighting an Entire Row.
+var cur_focused ;
+$(window).click(function(){
+   if(cur_focused == undefined){
+      cur_focused = $(".dt-cell--focus").parent().children();
+      cur_focused.css({"background-color":"#aec6cf"});
+   }else{
+      cur_focused.css({"background-color":"white"});
+      cur_focused = $(".dt-cell--focus").parent().children();
+       cur_focused.css({"background-color":"#aec6cf"});
+   }
+});
+
 frappe.query_reports["General Ledger"] = {
 	"filters": [
 		{
@@ -77,12 +90,15 @@ frappe.query_reports["General Ledger"] = {
 			"label": __("Party"),
 			"fieldtype": "MultiSelectList",
 			get_data: function(txt) {
+
 				if (!frappe.query_report.filters) return;
 
 				let party_type = frappe.query_report.get_filter_value('party_type');
 				if (!party_type) return;
 
 				return frappe.db.get_link_options(party_type, txt);
+
+
 			},
 			on_change: function() {
 				var party_type = frappe.query_report.get_filter_value('party_type');
@@ -159,7 +175,8 @@ frappe.query_reports["General Ledger"] = {
 			"label": __("Include Default Book Entries"),
 			"fieldtype": "Check"
 		}
-	]
+	],
+
 }
 
 erpnext.dimension_filters.forEach((dimension) => {
