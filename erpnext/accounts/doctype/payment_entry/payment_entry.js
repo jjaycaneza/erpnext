@@ -1001,7 +1001,7 @@ frappe.ui.form.on('Payment Entry', {
 							},
 							() => {
 								if(frm.doc.payment_type != "Internal") {
-									frm.clear_table("references");
+									//frm.clear_table("references");
 								}
 							}
 						]);
