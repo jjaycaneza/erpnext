@@ -4,19 +4,6 @@
 // Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
-//Highlighting an Entire Row.
-var cur_focused ;
-$(window).click(function(){
-   if(cur_focused == undefined){
-      cur_focused = $(".dt-cell--focus").parent().children();
-      cur_focused.css({"background-color":"#aec6cf"});
-   }else{
-      cur_focused.css({"background-color":"white"});
-      cur_focused = $(".dt-cell--focus").parent().children();
-       cur_focused.css({"background-color":"#aec6cf"});
-   }
-});
-
 frappe.query_reports["General Ledger"] = {
 	"filters": [
 		{
