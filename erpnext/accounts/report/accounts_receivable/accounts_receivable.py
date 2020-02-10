@@ -640,7 +640,8 @@ class ReceivablePayableReport(object):
 	def get_exp_clm_data(self):
 		data = []
 		exp_clm_gl_entry = frappe.db.sql("""SELECT DISTINCT voucher_no FROM `tabGL Entry`
-				WHERE account = '2006 - Accounts Payable ~ Fresh - G' and voucher_type = 'Expense Claim' order by creation desc 
+				WHERE account = '2000 - Accounts Payable - Trade - G' and voucher_type = 'Expense Claim' and against_voucher_type != 'Purchase Invoice' 
+				order by creation desc 
 			""", as_dict=True)
 
 		for gl in exp_clm_gl_entry:
@@ -663,11 +664,11 @@ class ReceivablePayableReport(object):
 						"Supplier Name": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_name"),
 						"voucher_type": "Expense Claim",
 						"voucher_no": exp_claim['name'],
-						"invoiced_amount": exp_detail['amount'],
-						"paid_amount": exp_detail['sanctioned_amount'],
+						"invoiced_amount": exp_detail['sanctioned_amount'],
+						"paid_amount": float(0),
 						"outstanding_amount": exp_detail['sanctioned_amount'],
 						"Supplier Group": frappe.get_value("Supplier", exp_detail['supplier'], "supplier_group"),
-						"remaining_balance": exp_detail['sanctioned_amount'],
+						"remaining_balance": float(0),
 						"debit_note": float(0),
 						"0-30": float(0),
 						"31-60": float(0),
