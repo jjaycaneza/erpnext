@@ -8,7 +8,7 @@ frappe.ui.form.on("Expense Claim Type", {
 			return{
 				filters: {
 					"is_group": 0,
-					"root_type": cur_frm.doc.is_payable_type == 1 ? "Liability" : "Expense",
+					"root_type": cur_frm.doc.is_payable_type == 1 ? "Liability" : cur_frm.doc.is_advance_type == 1 ? "Asset" : "Expense",
 					'company': d.company
 				}
 			}

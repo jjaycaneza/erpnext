@@ -77,12 +77,15 @@ frappe.query_reports["General Ledger"] = {
 			"label": __("Party"),
 			"fieldtype": "MultiSelectList",
 			get_data: function(txt) {
+
 				if (!frappe.query_report.filters) return;
 
 				let party_type = frappe.query_report.get_filter_value('party_type');
 				if (!party_type) return;
 
 				return frappe.db.get_link_options(party_type, txt);
+
+
 			},
 			on_change: function() {
 				var party_type = frappe.query_report.get_filter_value('party_type');
@@ -159,7 +162,8 @@ frappe.query_reports["General Ledger"] = {
 			"label": __("Include Default Book Entries"),
 			"fieldtype": "Check"
 		}
-	]
+	],
+
 }
 
 erpnext.dimension_filters.forEach((dimension) => {
