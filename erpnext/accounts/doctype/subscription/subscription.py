@@ -243,13 +243,26 @@ class Subscription(Document):
 		invoice.customer = self.customer
 		invoice.subscription = self.name
 		invoice.document_type = "Leasing"
-		invoice.cusa = self.cusa
-		invoice.electricity = self.electricity
-		invoice.fogging = self.fogging
+
+		# set fixed rate
 		invoice.cusa_total_amount = self.cusa_total_amount
-		invoice.electricity_total_amount = self.electricity_total_amount
+		invoice.aircon_total_amount = self.aircon_total_amount
 		invoice.fogging_total_amount = self.fogging_total_amount
-		invoice.total_subscription_amount = self.cusa_total_amount+self.electricity_total_amount+self.fogging_total_amount
+
+		# set variable rate
+		invoice.electricity_total_amount = self.electricity_total_amount
+		invoice.water_total_amount = self.water_total_amount
+		invoice.sales_of_pos_total_amount = self.sales_of_pos_total_amount
+		invoice.penalty_total_amount = self.penalty_total_amount
+		invoice.salary_total_amount = self.salary_total_amount
+		invoice.variable_rate_1_total_amount = self.variable_rate_1_total_amount
+		invoice.variable_rate_2_total_amount = self.variable_rate_2_total_amount
+
+		# set total subscription amount
+		invoice.total_subscription_amount = self.total_variable_cost
+		invoice.prepaid_tax_amount = self.total_base_charge * 0.05
+		invoice.prepaid_tax_account = "2205 - Prepaid Tax - G"
+
 
 		## Add dimesnions in invoice for subscription:
 		accounting_dimensions = get_accounting_dimensions()
@@ -270,6 +283,12 @@ class Subscription(Document):
 		if self.tax_template:
 			invoice.taxes_and_charges = self.tax_template
 			invoice.set_taxes()
+
+		invoice.append("taxes", {
+			"charge_type": "On Net Total",
+			"account_head":"2205 - Prepaid Tax - G",
+			"rate": -5,
+		})
 
 		# Due date
 		invoice.append(
@@ -313,9 +332,11 @@ class Subscription(Document):
 		for plan in plans:
 			item_code = frappe.db.get_value("Subscription Plan", plan.plan, "item")
 			if not prorate:
-				items.append({'item_code': item_code, 'qty': plan.qty, 'rate': get_plan_rate(plan.plan, plan.qty, customer)})
+				# items.append({'item_code': item_code, 'qty': plan.qty, 'rate': get_plan_rate(plan.plan, plan.qty, customer)})
+				items.append({'item_code': item_code, 'qty': plan.qty, 'rate': self.invoice_total})
 			else:
-				items.append({'item_code': item_code, 'qty': plan.qty, 'rate': (get_plan_rate(plan.plan, plan.qty, customer) * prorate_factor)})
+				# items.append({'item_code': item_code, 'qty': plan.qty, 'rate': (get_plan_rate(plan.plan, plan.qty, customer) * prorate_factor)})
+				items.append({'item_code': item_code, 'qty': plan.qty, 'rate': self.invoice_total})
 
 		return items
 

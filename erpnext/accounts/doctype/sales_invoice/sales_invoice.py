@@ -1233,7 +1233,7 @@ class SalesInvoice(SellingController):
 				## update status on Subscription Invoice
 				if self.subscription:
 					self.update_subscription_status(status)
-				print (self.status)
+
 
 			elif self.docstatus == 1:
 				if flt(self.outstanding_amount) > 0 and getdate(self.due_date) < getdate(nowdate()) and self.is_discounted and self.get_discounting_status()=='Disbursed':
@@ -1256,10 +1256,8 @@ class SalesInvoice(SellingController):
 				self.status = "Draft"
 
 		if update:
-			print (self.status)
 			self.db_set('status', self.status, update_modified = update_modified)
 			### update status on Subscription Invoice
-			print (self.status)
 			if self.subscription:
 				self.update_subscription_status(self.status)
 
