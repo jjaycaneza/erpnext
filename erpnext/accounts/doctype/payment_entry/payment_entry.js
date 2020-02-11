@@ -294,7 +294,7 @@ frappe.ui.form.on('Payment Entry', {
 									frm.set_value("paid_from", r.message.party_account);
 									frm.set_value("paid_from_account_currency", r.message.party_account_currency);
 									frm.set_value("paid_from_account_balance", r.message.account_balance);
-								} else if (frm.doc.payment_type == "Pay"){
+								} else if (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Funds Replenishment"){
 									frm.set_value("paid_to", r.message.party_account);
 									frm.set_value("paid_to_account_currency", r.message.party_account_currency);
 									frm.set_value("paid_to_account_balance", r.message.account_balance);
