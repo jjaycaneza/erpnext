@@ -244,13 +244,19 @@ class Subscription(Document):
 		invoice.subscription = self.name
 		invoice.document_type = "Leasing"
 
-		# set variable cost
+		# set fixed rate
 		invoice.cusa_total_amount = self.cusa_total_amount
 		invoice.aircon_total_amount = self.aircon_total_amount
-		invoice.electricity_total_amount = self.electricity_total_amount
 		invoice.fogging_total_amount = self.fogging_total_amount
+
+		# set variable rate
+		invoice.electricity_total_amount = self.electricity_total_amount
 		invoice.water_total_amount = self.water_total_amount
-		invoice.gasoline_total_amount = self.gasoline_total_amount
+		invoice.sales_of_pos_total_amount = self.sales_of_pos_total_amount
+		invoice.penalty_total_amount = self.penalty_total_amount
+		invoice.salary_total_amount = self.salary_total_amount
+		invoice.variable_rate_1_total_amount = self.variable_rate_1_total_amount
+		invoice.variable_rate_2_total_amount = self.variable_rate_2_total_amount
 
 		# set total subscription amount
 		invoice.total_subscription_amount = self.total_variable_cost
