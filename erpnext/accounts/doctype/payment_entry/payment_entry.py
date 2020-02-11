@@ -167,7 +167,7 @@ class PaymentEntry(AccountsController):
 						d.set(field, value)
 
 	def validate_payment_type(self):
-		if self.payment_type not in ("Receive", "Pay", "Internal Transfer"):
+		if self.payment_type not in ("Receive", "Pay", "Internal Transfer", "Funds Replenishment"):
 			frappe.throw(_("Payment Type must be one of Receive, Pay and Internal Transfer"))
 
 	def validate_party_details(self):
