@@ -79,7 +79,7 @@ class StockEntry(StockController):
 		self.calculate_rate_and_amount(update_finished_item_rate=False)
 
 	def on_submit(self):
-		if self.purpose != "Receive at Warehouse":
+		if self.purpose != "Receive at Warehouse" or self.purpose != "Receive at Branch":
 
 			# frappe.db.sql("UPDATE `tabStock Entry` SET per_transferred = 100 WHERE name=%s", self.name, as_dict=True)
 			# print(self.as_dict())
@@ -152,7 +152,7 @@ class StockEntry(StockController):
 	def validate_purpose(self):
 		valid_purposes = ["Material Issue", "Material Receipt", "Material Transfer",
 			"Material Transfer for Manufacture", "Manufacture", "Repack", "Send to Subcontractor",
-			"Material Consumption for Manufacture", "Send to Warehouse", "Receive at Warehouse"]
+			"Material Consumption for Manufacture", "Send to Warehouse", "Receive at Warehouse", "Send to Branch", "Receive at Branch"]
 
 		if self.purpose not in valid_purposes:
 			frappe.throw(_("Purpose must be one of {0}").format(comma_or(valid_purposes)))
@@ -275,10 +275,10 @@ class StockEntry(StockController):
 		"""perform various (sometimes conditional) validations on warehouse"""
 
 		source_mandatory = ["Material Issue", "Material Transfer", "Send to Subcontractor", "Material Transfer for Manufacture",
-			"Material Consumption for Manufacture", "Send to Warehouse", "Receive at Warehouse"]
+			"Material Consumption for Manufacture", "Send to Warehouse", "Receive at Warehouse", "Send to Branch", "Receive at Branch"]
 
 		target_mandatory = ["Material Receipt", "Material Transfer", "Send to Subcontractor",
-			"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse"]
+			"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse", "Send to Branch", "Receive at Branch"]
 
 		validate_for_manufacture_repack = any([d.bom_no for d in self.get("items")])
 
@@ -761,7 +761,7 @@ class StockEntry(StockController):
 	def set_items_for_stock_in(self):
 		self.items = []
 
-		if self.outgoing_stock_entry and self.purpose == 'Receive at Warehouse':
+		if self.outgoing_stock_entry and self.purpose == 'Receive at Warehouse' or self.purpose == 'Receive at Branch':
 			doc = frappe.get_doc('Stock Entry', self.outgoing_stock_entry)
 
 			if doc.per_transferred == 100:
@@ -794,7 +794,7 @@ class StockEntry(StockController):
 		if self.bom_no:
 
 			if self.purpose in ["Material Issue", "Material Transfer", "Manufacture", "Repack",
-					"Send to Subcontractor", "Material Transfer for Manufacture", "Material Consumption for Manufacture"]:
+					"Send to Subcontractor", "Material Transfer for Manufacture", "Material Consumption for Manufacture", "Send to Branch", "Receive at Branch"]:
 
 				if self.work_order and self.purpose == "Material Transfer for Manufacture":
 					item_dict = self.get_pending_raw_materials()
@@ -1236,7 +1236,7 @@ class StockEntry(StockController):
 						 to fullfill Sales Order {2}.").format(item.item_code, sr, sales_order))
 
 	def update_transferred_qty(self):
-		if self.purpose == 'Receive at Warehouse':
+		if self.purpose == 'Receive at Warehouse' or self.purpose == 'Receive at Branch':
 			stock_entries = {}
 			stock_entries_child_list = []
 			for d in self.items:

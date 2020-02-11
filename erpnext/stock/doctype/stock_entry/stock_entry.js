@@ -19,7 +19,7 @@ frappe.ui.form.on('Stock Entry', {
 				filters: [
 					['Stock Entry', 'docstatus', '=', 1],
 					['Stock Entry', 'per_transferred', '<','100'],
-					['Stock Entry', 'purpose', '=', 'Send to Warehouse']
+					['Stock Entry', 'purpose', 'in', 'Send to Warehouse, Send to Branch']
 				]
 			}
 		});
@@ -242,7 +242,7 @@ frappe.ui.form.on('Stock Entry', {
 			frm.trigger("toggle_display_account_head");
 		}
 
-		if(frm.doc.docstatus==1 && frm.doc.purpose == "Material Receipt" && frm.get_sum('items', 			'sample_quantity')) {
+		if(frm.doc.docstatus==1 && frm.doc.purpose == "Material Receipt" && frm.get_sum('items', 'sample_quantity')) {
 			frm.add_custom_button(__('Create Sample Retention Stock Entry'), function () {
 				frm.trigger("make_retention_stock_entry");
 			});
@@ -780,9 +780,9 @@ erpnext.stock.StockEntry = erpnext.stock.StockController.extend({
 	},
 
 	source_mandatory: ["Material Issue", "Material Transfer", "Send to Subcontractor",
-		"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse"],
+		"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse", "Send to Branch", "Receive at Branch"],
 	target_mandatory: ["Material Receipt", "Material Transfer", "Send to Subcontractor",
-		"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse"],
+		"Material Transfer for Manufacture", "Send to Warehouse", "Receive at Warehouse", "Send to Branch", "Receive at Branch"],
 
 	from_warehouse: function(doc) {
 		var me = this;
