@@ -136,6 +136,9 @@ class SalesInvoice(SellingController):
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
 
+		if self.subscription and not self.is_new():
+			self.update_subscription_status(self.status)
+
 
 	def before_save(self):
 		set_account_for_mode_of_payment(self)
@@ -199,6 +202,9 @@ class SalesInvoice(SellingController):
 
 		if "Healthcare" in active_domains:
 			manage_invoice_submit_cancel(self, "on_submit")
+
+		if self.subscription:
+			self.update_subscription_status(self.status)
 
 	def validate_pos_return(self):
 
@@ -264,6 +270,9 @@ class SalesInvoice(SellingController):
 
 		if "Healthcare" in active_domains:
 			manage_invoice_submit_cancel(self, "on_cancel")
+
+		if self.subscription:
+			self.update_subscription_status(self.status)
 
 	def update_status_updater_args(self):
 		if cint(self.update_stock):
@@ -1258,6 +1267,8 @@ class SalesInvoice(SellingController):
 	def update_subscription_status(self, status):
 		subscription_invoice = frappe.get_doc("Subscription Invoice", {"invoice": self.name})
 		subscription_invoice.db_set('status', status, update_modified=True)
+		subscription_invoice.db_set('period', self.due_date, update_modified=True)
+		subscription_invoice.db_set('amount', self.grand_total, update_modified=True)
 
 def validate_inter_company_party(doctype, party, company, inter_company_reference):
 	if not party:

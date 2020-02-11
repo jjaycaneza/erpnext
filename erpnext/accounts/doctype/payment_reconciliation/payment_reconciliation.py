@@ -14,17 +14,19 @@ class PaymentReconciliation(Document):
 	def get_unreconciled_entries(self):
 		self.get_nonreconciled_payment_entries()
 		self.get_invoice_entries()
+		self.get_exp_claim_entries()
 
 	def get_nonreconciled_payment_entries(self):
 		self.check_mandatory_to_fetch()
 
 		payment_entries = self.get_payment_entries()
 		journal_entries = self.get_jv_entries()
+		expense_claim_entries = self.get_exp_claim_entries()
 
 		if self.party_type in ["Customer", "Supplier"]:
 			dr_or_cr_notes = self.get_dr_or_cr_notes()
 
-		self.add_payment_entries(payment_entries + journal_entries + dr_or_cr_notes)
+			self.add_payment_entries(payment_entries + journal_entries + dr_or_cr_notes + expense_claim_entries)
 
 	def get_payment_entries(self):
 		order_doctype = "Sales Order" if self.party_type=="Customer" else "Purchase Order"
@@ -103,6 +105,31 @@ class PaymentReconciliation(Document):
 			'account': self.receivable_payable_account
 		}, as_dict=1)
 
+	# FOR EXPENSE CLAIM
+	def get_exp_claim_entries(self):
+		expense_claims = []
+		gl_expense = frappe.db.sql("""
+			SELECT DISTINCT voucher_no, party, voucher_type, account from `tabGL Entry` 
+			where voucher_type='Expense Claim' and party_type=%s and party=%s and account=%s and against_voucher_type != 'Purchase Invoice'
+		""",(self.party_type,self.party,self.receivable_payable_account) ,as_dict = 1)
+
+		for gl in gl_expense:
+			exp_clm_detail = frappe.db.sql("""
+				SELECT sanctioned_amount FROM `tabExpense Claim Detail` where parent=%s
+			""", gl['voucher_no'], as_dict=1)
+
+			for exp_claim in exp_clm_detail:
+				# get reference_name, invoice_name, amount, allocated_amount, difference_account
+				expense_claims.append({
+					"reference_type": gl['voucher_type'],
+					"reference_name": gl['voucher_no'],
+					"amount": exp_claim['sanctioned_amount'],
+					"account": gl['account'],
+				})
+
+		return expense_claims
+
+
 	def add_payment_entries(self, entries):
 		self.set('payments', [])
 		for e in entries:
@@ -152,6 +179,8 @@ class PaymentReconciliation(Document):
 			if e.invoice_number and e.allocated_amount:
 				if e.reference_type in ['Sales Invoice', 'Purchase Invoice']:
 					reconciled_entry = dr_or_cr_notes
+				elif e.reference_type == "Expense Claim":
+					self.recon_pi_and_expense_claim(e.invoice_number, e.amount, e.allocated_amount, e.reference_name)
 				else:
 					reconciled_entry = lst
 
@@ -165,6 +194,26 @@ class PaymentReconciliation(Document):
 
 		msgprint(_("Successfully Reconciled"))
 		self.get_unreconciled_entries()
+
+
+	## Reconcile Expense Claim
+	def recon_pi_and_expense_claim(self, invoice_no, amount, pi_allocated_amount, exp_claim):
+		pi_doc = frappe.get_doc("Purchase Invoice", invoice_no)
+		pi_outstanding_amount = amount - pi_allocated_amount
+		pi_doc.db_set('outstanding_amount', pi_outstanding_amount, update_modified=True)
+		self.update_exp_clm_gl_entry(invoice_no, exp_claim)
+
+	## Update GL Expense Claim
+	def update_exp_clm_gl_entry(self, invoice_no, exp_claim):
+		gl_entry = frappe.db.sql("""
+				SELECT DISTINCT name from `tabGL Entry` where voucher_type = 'Expense Claim' 
+				and voucher_no=%s and account = '2000 - Accounts Payable - Trade - G' and credit <= 0 and debit > 0;
+		""", exp_claim ,as_dict=1)
+		for gl in gl_entry:
+			gl_doc = frappe.get_doc("GL Entry", gl['name'])
+			gl_doc.db_set("against_voucher_type", "Purchase Invoice", update_modified = True)
+			gl_doc.db_set("against_voucher", invoice_no, update_modified = True)
+
 
 	def get_payment_details(self, row, dr_or_cr):
 		return frappe._dict({
