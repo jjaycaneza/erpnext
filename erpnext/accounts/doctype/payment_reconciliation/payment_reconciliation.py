@@ -23,8 +23,9 @@ class PaymentReconciliation(Document):
 		journal_entries = self.get_jv_entries()
 		expense_claim_entries = self.get_exp_claim_entries()
 
-		if self.party_type in ["Customer", "Supplier"]:
+		if self.party_type in ["Customer", "Supplier", "Employee"]:
 			dr_or_cr_notes = self.get_dr_or_cr_notes()
+			print ("drrrr_or", dr_or_cr_notes)
 
 			self.add_payment_entries(payment_entries + journal_entries + dr_or_cr_notes + expense_claim_entries)
 
@@ -32,7 +33,7 @@ class PaymentReconciliation(Document):
 		order_doctype = "Sales Order" if self.party_type=="Customer" else "Purchase Order"
 		payment_entries = get_advance_payment_entries(self.party_type, self.party,
 			self.receivable_payable_account, order_doctype, against_all_orders=True, limit=self.limit)
-
+		print ("ppaayyymmeennnttt", payment_entries)
 		return payment_entries
 
 	def get_jv_entries(self):
