@@ -1015,8 +1015,8 @@ def get_advance_journal_entries(party_type, party, party_account, amount_field,
 
 def get_advance_payment_entries(party_type, party, party_account, order_doctype,
 		order_list=None, include_unallocated=True, against_all_orders=False, limit=None):
-	party_account_field = "paid_from" if party_type == "Customer" else "paid_to"
-	payment_type = "Receive" if party_type == "Customer" else "Pay"
+	party_account_field = "paid_from" if party_type == "Customer" else "paid_to" if party_type == "Employee" else "paid_to"
+	payment_type = "Receive" if party_type == "Customer" else "Funds Replenishment" if party_type == "Employee" else "Pay"
 	payment_entries_against_order, unallocated_payment_entries = [], []
 	limit_cond = "limit %s" % limit if limit else ""
 
@@ -1053,7 +1053,6 @@ def get_advance_payment_entries(party_type, party, party_account, order_doctype,
 					and docstatus = 1 and unallocated_amount > 0
 				order by posting_date {1}
 			""".format(party_account_field, limit_cond), (party_account, party_type, party, payment_type), as_dict=1)
-
 	return list(payment_entries_against_order) + list(unallocated_payment_entries)
 
 

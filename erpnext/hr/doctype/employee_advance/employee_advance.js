@@ -80,7 +80,9 @@ frappe.ui.form.on('Employee Advance', {
 				"expense_claim_fund_source": frm.doc.employee_advance_fund_source,
 				"returned_money": frm.doc.returned_money,
 				"branch": frm.doc.branch,
-				"business_units": frm.doc.business_units
+				"business_units": frm.doc.business_units,
+				"transacting_employee": frm.doc.transacting_employee,
+				"trans_employee_name": frm.doc.trans_employee_name
 			},
 			callback: function(r) {
 				const doclist = frappe.model.sync(r.message);
