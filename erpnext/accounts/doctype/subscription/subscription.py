@@ -244,24 +244,31 @@ class Subscription(Document):
 		invoice.subscription = self.name
 		invoice.document_type = "Leasing"
 
-		# set fixed rate
-		invoice.cusa_total_amount = self.cusa_total_amount
-		invoice.aircon_total_amount = self.aircon_total_amount
-		invoice.fogging_total_amount = self.fogging_total_amount
+		# SUBSCRIPTION INCREMENTAL VARIABLE RATES
+		invoice.others_1_vat_or_nonvat = self.variable_rate_1_vat_or_nonvat
+		invoice.others_2_vat_or_nonvat = self.variable_rate_2_vat_or_nonvat
 
-		# set variable rate
-		invoice.electricity_total_amount = self.electricity_total_amount
-		invoice.water_total_amount = self.water_total_amount
-		invoice.sales_of_pos_total_amount = self.sales_of_pos_total_amount
-		invoice.penalty_total_amount = self.penalty_total_amount
-		invoice.salary_total_amount = self.salary_total_amount
-		invoice.variable_rate_1_total_amount = self.variable_rate_1_total_amount
-		invoice.variable_rate_2_total_amount = self.variable_rate_2_total_amount
+		#prepaid tax, output tax, plan amount
+		invoice.prepaid_tax = self.prepaid_tax
+		invoice.output_tax = self.output_tax
+		invoice.plan_amount = self.total_amount_on_plan
 
-		# set total subscription amount
-		invoice.total_subscription_amount = self.total_variable_cost
-		invoice.prepaid_tax_amount = self.total_base_charge * 0.05
-		invoice.prepaid_tax_account = "2205 - Prepaid Tax - G"
+
+		# SUBSCRIPTION DETAILS
+		for details in self.get("si_subscription_details"):
+			invoice.append("si_subscription_details", {
+				"label": details.label,
+				"fixed_rate_label": details.fixed_rate_label,
+				"fixed_rate": details.fixed_rate,
+				"variable_rate_label": details.variable_rate_label,
+				"variable_rate": details.variable_rate
+			})
+		# SUBSCRIPTION TOTALS
+		for totals in self.get("si_subscription_totals"):
+			invoice.append("subscription_totals", {
+				"total_labels": totals.total_labels,
+				"total": totals.total
+			})
 
 
 		## Add dimesnions in invoice for subscription:
@@ -284,11 +291,20 @@ class Subscription(Document):
 			invoice.taxes_and_charges = self.tax_template
 			invoice.set_taxes()
 
+		# SUBSCRIPTION OUTPUT TAX
 		invoice.append("taxes", {
-			"charge_type": "On Net Total",
-			"account_head":"2205 - Prepaid Tax - G",
-			"rate": -5,
+			"charge_type": "Actual",
+			"account_head": "2201 - Output Tax - G",
+			"tax_amount": self.output_tax,
 		})
+
+		# SUBSCRIPTION PREPAID TAX
+		invoice.append("taxes", {
+			"charge_type": "Actual",
+			"account_head": "2205 - Prepaid Tax - G",
+			"tax_amount": -self.prepaid_tax,
+		})
+
 
 		# Due date
 		invoice.append(
@@ -317,6 +333,7 @@ class Subscription(Document):
 		invoice.flags.ignore_mandatory = True
 		invoice.save()
 
+		print("hjahdkas")
 
 		return invoice
 
