@@ -323,7 +323,7 @@ frappe.ui.form.on('Payment Entry', {
 
 		frm.events.set_account_currency_and_balance(frm, frm.doc.paid_from,
 			"paid_from_account_currency", "paid_from_account_balance", function(frm) {
-				if (frm.doc.payment_type == "Pay") {
+				if (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Funds Replenishment"){
 					frm.events.paid_amount(frm);
 				}
 			}
@@ -503,7 +503,7 @@ frappe.ui.form.on('Payment Entry', {
 		frm.set_value("base_received_amount",
 			flt(frm.doc.received_amount) * flt(frm.doc.target_exchange_rate));
 
-		if(frm.doc.payment_type == "Pay")
+		if(frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Funds Replenishment")
 			frm.events.allocate_party_amount_against_ref_docs(frm, frm.doc.received_amount);
 		else
 			frm.events.set_unallocated_amount(frm);
@@ -775,6 +775,11 @@ frappe.ui.form.on('Payment Entry', {
 				&& frm.doc.total_allocated_amount < frm.doc.received_amount + (total_deductions / frm.doc.target_exchange_rate)) {
 					unallocated_amount = (frm.doc.base_paid_amount - (total_deductions
 						+ frm.doc.base_total_allocated_amount)) / frm.doc.target_exchange_rate;
+			} else if (frm.doc.payment_type == "Funds Replenishment"
+				&& frm.doc.base_total_allocated_amount < frm.doc.base_paid_amount - total_deductions
+				&& frm.doc.total_allocated_amount < frm.doc.received_amount + (total_deductions / frm.doc.target_exchange_rate)) {
+					unallocated_amount = (frm.doc.base_paid_amount - (total_deductions
+						+ frm.doc.base_total_allocated_amount)) / frm.doc.target_exchange_rate;
 			}
 		}
 		frm.set_value("unallocated_amount", unallocated_amount);
@@ -790,7 +795,7 @@ frappe.ui.form.on('Payment Entry', {
 
 		if(frm.doc.payment_type == "Receive") {
 			difference_amount = base_party_amount - flt(frm.doc.base_received_amount);
-		} else if (frm.doc.payment_type == "Pay") {
+		} else if (frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Funds Replenishment") {
 			difference_amount = flt(frm.doc.base_paid_amount) - base_party_amount;
 		} else {
 			difference_amount = flt(frm.doc.base_paid_amount) - flt(frm.doc.base_received_amount);
@@ -905,7 +910,7 @@ frappe.ui.form.on('Payment Entry', {
 	},
 
 	bank_account: function(frm) {
-		const field = frm.doc.payment_type == "Pay" ? "paid_from":"paid_to";
+		const field = frm.doc.payment_type == "Pay" || frm.doc.payment_type == "Funds Replenishment" ? "paid_from":"paid_to";
 		if (frm.doc.bank_account && in_list(['Pay', 'Receive'], frm.doc.payment_type)) {
 			frappe.call({
 				method: "erpnext.accounts.doctype.bank_account.bank_account.get_bank_account_details",

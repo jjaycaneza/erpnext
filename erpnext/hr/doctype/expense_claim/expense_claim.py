@@ -382,7 +382,7 @@ def get_advances(employee, advance_id=None):
 
 @frappe.whitelist()
 def get_expense_claim(
-	employee_name, company, employee_advance_name, posting_date, paid_amount, claimed_amount, expense_claim_fund_source, branch, returned_money, business_units):
+	employee_name, company, employee_advance_name, posting_date, paid_amount, claimed_amount, expense_claim_fund_source, branch, returned_money, business_units, transacting_employee):
 	default_payable_account = frappe.get_cached_value('Company',  company,  "default_payable_account")
 	default_cost_center = frappe.get_cached_value('Company',  company,  'cost_center')
 
@@ -394,6 +394,7 @@ def get_expense_claim(
 	expense_claim.total_unclaimed = flt(paid_amount) - (flt(claimed_amount) + flt(returned_money))
 	expense_claim.branch = branch
 	expense_claim.business_units = business_units
+	expense_claim.transacting_employee = transacting_employee
 	expense_claim.cost_center = default_cost_center
 	expense_claim.is_paid = 1 if flt(paid_amount) else 0
 	expense_claim.append(

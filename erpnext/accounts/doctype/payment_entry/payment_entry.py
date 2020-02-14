@@ -38,7 +38,7 @@ class PaymentEntry(AccountsController):
 			self.party_account = self.paid_from
 			self.party_account_currency = self.paid_from_account_currency
 
-		elif self.payment_type == "Pay":
+		elif self.payment_type in ["Pay", "Funds Replenishment"]:
 			self.party_account_field = "paid_to"
 			self.party_account = self.paid_to
 			self.party_account_currency = self.paid_to_account_currency
@@ -97,7 +97,7 @@ class PaymentEntry(AccountsController):
 		if self.bank_account:
 			bank_data = get_bank_account_details(self.bank_account)
 
-			field = "paid_from" if self.payment_type == "Pay" else "paid_to"
+			field = "paid_from" if self.payment_type in ["Pay", "Funds Replenishment"] else "paid_to"
 
 			self.bank = bank_data.bank
 			self.bank_account_no = bank_data.bank_account_no
@@ -316,7 +316,7 @@ class PaymentEntry(AccountsController):
 				and self.total_allocated_amount < self.paid_amount + (total_deductions / self.source_exchange_rate):
 					self.unallocated_amount = (self.base_received_amount + total_deductions -
 						self.base_total_allocated_amount) / self.source_exchange_rate
-			elif self.payment_type == "Pay" \
+			elif self.payment_type in ["Pay", "Funds Replenishment"] \
 				and self.base_total_allocated_amount < (self.base_paid_amount - total_deductions) \
 				and self.total_allocated_amount < self.received_amount + (total_deductions / self.target_exchange_rate):
 					self.unallocated_amount = (self.base_paid_amount - (total_deductions +
@@ -330,7 +330,7 @@ class PaymentEntry(AccountsController):
 
 		if self.payment_type == "Receive":
 			self.difference_amount = base_party_amount - self.base_received_amount
-		elif self.payment_type == "Pay":
+		elif self.payment_type in ["Pay", "Funds Replenishment"]:
 			self.difference_amount = self.base_paid_amount - base_party_amount
 		else:
 			self.difference_amount = self.base_paid_amount - flt(self.base_received_amount)
@@ -367,7 +367,7 @@ class PaymentEntry(AccountsController):
 					.format(total_negative_outstanding), InvalidPaymentEntry)
 
 	def set_title(self):
-		if self.payment_type in ("Receive", "Pay"):
+		if self.payment_type in ("Receive", "Pay", "Funds Replenishment"):
 			self.title = self.party
 		else:
 			self.title = self.paid_from + " - " + self.paid_to
@@ -398,7 +398,7 @@ class PaymentEntry(AccountsController):
 			remarks.append(_("Transaction reference no {0} dated {1}")
 				.format(self.reference_no, self.reference_date))
 
-		if self.payment_type in ["Receive", "Pay"]:
+		if self.payment_type in ["Receive", "Pay", "Funds Replenishment"]:
 			for d in self.get("references"):
 				if d.allocated_amount:
 					remarks.append(_("Amount {0} {1} against {2} {3}").format(self.party_account_currency,
@@ -413,7 +413,7 @@ class PaymentEntry(AccountsController):
 		self.set("remarks", "\n".join(remarks))
 
 	def make_gl_entries(self, cancel=0, adv_adj=0):
-		if self.payment_type in ("Receive", "Pay") and not self.get("party_account_field"):
+		if self.payment_type in ("Receive", "Pay", "Funds Replenishment") and not self.get("party_account_field"):
 			self.setup_party_account_field()
 
 		gl_entries = []
@@ -472,12 +472,12 @@ class PaymentEntry(AccountsController):
 				gl_entries.append(gle)
 
 	def add_bank_gl_entries(self, gl_entries):
-		if self.payment_type in ("Pay", "Internal Transfer"):
+		if self.payment_type in ("Pay", "Internal Transfer", "Funds Replenishment"):
 			gl_entries.append(
 				self.get_gl_dict({
 					"account": self.paid_from,
 					"account_currency": self.paid_from_account_currency,
-					"against": self.party if self.payment_type=="Pay" else self.paid_to,
+					"against": self.party if self.payment_type in ["Pay", "Funds Replenishment"] else self.paid_to,
 					"credit_in_account_currency": self.paid_amount,
 					"credit": self.base_paid_amount,
 					"cost_center": self.cost_center

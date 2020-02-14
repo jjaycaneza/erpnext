@@ -14,7 +14,7 @@ class PaymentReconciliation(Document):
 	def get_unreconciled_entries(self):
 		self.get_nonreconciled_payment_entries()
 		self.get_invoice_entries()
-		self.get_exp_claim_entries()
+		# self.get_exp_claim_entries()
 
 	def get_nonreconciled_payment_entries(self):
 		self.check_mandatory_to_fetch()
@@ -23,11 +23,16 @@ class PaymentReconciliation(Document):
 		journal_entries = self.get_jv_entries()
 		expense_claim_entries = self.get_exp_claim_entries()
 
-		if self.party_type in ["Customer", "Supplier", "Employee"]:
+		if self.party_type in ["Customer", "Supplier"]:
 			dr_or_cr_notes = self.get_dr_or_cr_notes()
 			print ("drrrr_or", dr_or_cr_notes)
 
 			self.add_payment_entries(payment_entries + journal_entries + dr_or_cr_notes + expense_claim_entries)
+
+		elif self.party_type in ["Employee"]:
+			dr_or_cr_notes = self.get_dr_or_cr_notes()
+			self.add_payment_entries(payment_entries + journal_entries + dr_or_cr_notes)
+			print(payment_entries + journal_entries + dr_or_cr_notes)
 
 	def get_payment_entries(self):
 		order_doctype = "Sales Order" if self.party_type=="Customer" else "Purchase Order"
