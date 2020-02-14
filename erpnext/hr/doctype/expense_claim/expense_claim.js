@@ -298,11 +298,13 @@ frappe.ui.form.on("Expense Claim", {
 					employee: frm.doc.employee
 				},
 				callback: function(r, rt) {
+					console.log(r.message)
 
 					if(r.message) {
 						$.each(r.message, function(i, d) {
 							var row = frappe.model.add_child(frm.doc, "Expense Claim Advance", "advances");
 							row.employee_advance = d.name;
+							row.transacting_employee = d.trans_employee_name;
 							row.posting_date = d.posting_date;
 							row.advance_account = d.advance_account;
 							row.advance_paid = d.paid_amount;
