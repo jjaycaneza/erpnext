@@ -79,7 +79,8 @@ class StockEntry(StockController):
 		self.calculate_rate_and_amount(update_finished_item_rate=False)
 
 	def on_submit(self):
-		if self.purpose != "Receive at Warehouse" or self.purpose != "Receive at Branch":
+		lock = ["Receive at Warehouse", "Receive at Branch"]
+		if self.purpose not in lock:
 
 			# frappe.db.sql("UPDATE `tabStock Entry` SET per_transferred = 100 WHERE name=%s", self.name, as_dict=True)
 			# print(self.as_dict())
