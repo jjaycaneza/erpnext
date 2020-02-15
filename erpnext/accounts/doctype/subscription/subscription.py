@@ -257,7 +257,8 @@ class Subscription(Document):
 		# SUBSCRIPTION DETAILS
 		for details in self.get("si_subscription_details"):
 			invoice.append("si_subscription_details", {
-				"label": details.label,
+				"base": details.base,
+				"base_rate": details.base_rate,
 				"fixed_rate_label": details.fixed_rate_label,
 				"fixed_rate": details.fixed_rate,
 				"variable_rate_label": details.variable_rate_label,
