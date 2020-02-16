@@ -255,14 +255,35 @@ class Subscription(Document):
 
 
 		# SUBSCRIPTION DETAILS
-		for details in self.get("si_subscription_details"):
-			invoice.append("si_subscription_details", {
-				"base": details.base,
-				"base_rate": details.base_rate,
-				"fixed_rate_label": details.fixed_rate_label,
-				"fixed_rate": details.fixed_rate,
-				"variable_rate_label": details.variable_rate_label,
-				"variable_rate": details.variable_rate
+		#  add row for incremental
+		for i in range(len(self.get("si_subscription_details")) - 2):
+			invoice.append('si_subscription_details',{
+				"base": self.get("si_subscription_details")[i].base,
+				"base_rate": self.get("si_subscription_details")[i].base_rate,
+				"fixed_rate_label": self.get("si_subscription_details")[i].fixed_rate_label,
+				"fixed_rate": self.get("si_subscription_details")[i].fixed_rate,
+				"variable_rate_label": self.get("si_subscription_details")[i].variable_rate_label,
+				"variable_rate": self.get("si_subscription_details")[i].variable_rate
+			})
+		# add additional 3 rows for Others 1-3
+		for i in range(3, 6):
+			invoice.append('si_subscription_details',{
+				"base": None,
+				"base_rate": float(0),
+				"fixed_rate_label": None,
+				"fixed_rate": float(0),
+				"variable_rate_label": "Others " + str(i),
+				"variable_rate": float(0)
+			})
+		# add rows for totals
+		for i in range(len(self.get("si_subscription_details")) - 2, len(self.get("si_subscription_details"))):
+			invoice.append('si_subscription_details',{
+				"base": self.get("si_subscription_details")[i].base,
+				"base_rate": self.get("si_subscription_details")[i].base_rate,
+				"fixed_rate_label": self.get("si_subscription_details")[i].fixed_rate_label,
+				"fixed_rate": self.get("si_subscription_details")[i].fixed_rate,
+				"variable_rate_label": self.get("si_subscription_details")[i].variable_rate_label,
+				"variable_rate": self.get("si_subscription_details")[i].variable_rate
 			})
 		# SUBSCRIPTION TOTALS
 		for totals in self.get("si_subscription_totals"):
@@ -334,7 +355,6 @@ class Subscription(Document):
 		invoice.flags.ignore_mandatory = True
 		invoice.save()
 
-		print("hjahdkas")
 
 		return invoice
 
