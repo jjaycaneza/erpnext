@@ -252,6 +252,7 @@ class Subscription(Document):
 		invoice.prepaid_tax = self.prepaid_tax
 		invoice.output_tax = self.output_tax
 		invoice.plan_amount = self.total_amount_on_plan
+		invoice.base_with_vat = self.base_with_vat
 
 
 		# SUBSCRIPTION DETAILS
