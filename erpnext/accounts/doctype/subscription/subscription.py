@@ -252,12 +252,11 @@ class Subscription(Document):
 		invoice.prepaid_tax = self.prepaid_tax
 		invoice.output_tax = self.output_tax
 		invoice.plan_amount = self.total_amount_on_plan
-		invoice.base_with_vat = self.base_with_vat
 
 
 		# SUBSCRIPTION DETAILS
 		#  add row for incremental
-		for i in range(len(self.get("si_subscription_details")) - 2):
+		for i in range(len(self.get("si_subscription_details")) - 3):
 			invoice.append('si_subscription_details',{
 				"base": self.get("si_subscription_details")[i].base,
 				"base_rate": self.get("si_subscription_details")[i].base_rate,
@@ -277,7 +276,7 @@ class Subscription(Document):
 				"variable_rate": float(0)
 			})
 		# add rows for totals
-		for i in range(len(self.get("si_subscription_details")) - 2, len(self.get("si_subscription_details"))):
+		for i in range(len(self.get("si_subscription_details")) - 3, len(self.get("si_subscription_details"))):
 			invoice.append('si_subscription_details',{
 				"base": self.get("si_subscription_details")[i].base,
 				"base_rate": self.get("si_subscription_details")[i].base_rate,
