@@ -256,6 +256,32 @@ def get_data():
 			]
 		},
 		{
+			"label": _("Funds Handling"),
+			"icon": "fa fa-microchip ",
+			"items": [
+				{
+					"type": "doctype",
+					"label": _("Funds Reconciliation List"),
+					"name": "Funds Reconciliation",
+				},
+				{
+					"type": "doctype",
+					"label": _("Expense Claim Batching List"),
+					"name": "Expense Claim Batching",
+				},
+				{
+					"type": "doctype",
+					"label": _("Funds Replenishment"),
+					"name": "Funds Replenishment",
+				},
+				{
+					"type": "doctype",
+					"label": _("Funds Reconciliation Daily Summary List"),
+					"name": "Funds Reconciliation Daily Summary",
+				},
+			]
+		},
+		{
 			"label": _("Taxes"),
 			"items": [
 				{
@@ -562,8 +588,7 @@ def get_data():
 					"is_query_report": True
 				}
 			]
-		},
-
+		}
 	]
 
 	gst = {
