@@ -774,7 +774,7 @@
     },
     {
      "fieldname": "other_charges_calculation",
-     "fieldtype": "Text",
+     "fieldtype": "Long Text",
      "label": "Taxes and Charges Calculation",
      "no_copy": 1,
      "oldfieldtype": "HTML",
