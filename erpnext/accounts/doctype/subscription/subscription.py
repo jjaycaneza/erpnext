@@ -252,6 +252,18 @@ class Subscription(Document):
 		invoice.prepaid_tax = self.prepaid_tax
 		invoice.output_tax = self.output_tax
 		invoice.plan_amount = self.total_amount_on_plan
+		invoice.invoice_amount = self.invoice_total
+		invoice.net_without_penalty = self.get("si_subscription_totals")[6].total
+
+
+		if self.electricity == 1:
+			invoice.append("variables_calculations", {
+				"variable": "Electricity"
+			})
+		if self.water == 1:
+			invoice.append("variables_calculations", {
+				"variable": "Water"
+			})
 
 
 		# SUBSCRIPTION DETAILS
