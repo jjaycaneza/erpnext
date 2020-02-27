@@ -76,6 +76,7 @@ class EmployeeAdvance(Document):
 				AND ec.name = eca.parent
 				AND ec.docstatus=1
 				AND eca.allocated_amount > 0
+				AND ec.is_return_ca = 0
 		""", self.name)[0][0] or 0
 
 		frappe.db.set_value("Employee Advance", self.name, "claimed_amount", flt(claimed_amount))
