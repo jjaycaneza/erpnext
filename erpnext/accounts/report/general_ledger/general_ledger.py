@@ -156,7 +156,24 @@ def get_gl_entries(filters):
             order_by_statement=order_by_statement
         ),
         filters, as_dict=1)
+    print( """
+        select
+            posting_date, cheque_date, memo_1, memo_2, memo_3, account, party_type, party,
+            voucher_type, voucher_no, cost_center, project,
+            against_voucher_type, against_voucher, account_currency,
+            remarks, against, is_opening {select_fields}
+        from `tabGL Entry`
+        where company=%(company)s {conditions} {group_by_statement}
+        {order_by_statement}
+        """.format(
+            select_fields=select_fields, conditions=get_conditions(filters),
+            group_by_statement=group_by_statement,
+            order_by_statement=order_by_statement
+        ) %
+        filters)
 
+    print(filters)
+    print(gl_entries)
     for gl in gl_entries:
         if gl.voucher_type == "Payment Entry":
             cheque = frappe.get_value("Payment Entry", gl.voucher_no, ['reference_date', 'reference_no'])
@@ -166,6 +183,7 @@ def get_gl_entries(filters):
     if filters.get('presentation_currency'):
         return convert_to_presentation_currency(gl_entries, currency_map)
     else:
+
         return gl_entries
 
 
@@ -181,7 +199,19 @@ def get_conditions(filters):
         conditions.append("cost_center in %(cost_center)s")
 
     if filters.get("voucher_no"):
-        conditions.append("voucher_no=%(voucher_no)s")
+        vouchers  = filters['voucher_no'].split(',')
+        words = "voucher_no in ( "
+        print(vouchers)
+        for index,voucher in enumerate(vouchers):
+
+            if index == len(vouchers)-1:
+                words =words + "'"+voucher+"'"+ ")"
+            else:
+                words = words +"'"+voucher+"'" + ","
+        print(words)
+        conditions.append(words)
+
+        # conditions.append("voucher_no in ( %(voucher_no)s )")
 
     if filters.get("group_by") == "Group by Party" and not filters.get("party_type"):
         conditions.append("party_type in ('Customer', 'Supplier')")
@@ -194,6 +224,7 @@ def get_conditions(filters):
 
     if not (filters.get("account") or filters.get("party") or
                     filters.get("group_by") in ["Group by Account", "Group by Party"]):
+
         conditions.append("posting_date >=%(from_date)s")
         conditions.append("posting_date <=%(to_date)s")
 
