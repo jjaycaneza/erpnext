@@ -25,21 +25,36 @@ class BankReconciliation(Document):
 		if self.bank_account_no:
 			account_cond = " and t2.bank_account_no = {0}".format(frappe.db.escape(self.bank_account_no))
 
+		# journal_entries = frappe.db.sql("""
+		# 	select
+		# 		"Journal Entry" as payment_document, t1.name as payment_entry,
+		# 		t1.cheque_no as cheque_number, t1.cheque_date,
+		# 		sum(t2.debit_in_account_currency) as debit, sum(t2.credit_in_account_currency) as credit,
+		# 		t1.posting_date, t2.against_account, t1.clearance_date, t2.account_currency
+		# 	from
+		# 		`tabJournal Entry` t1, `tabJournal Entry Account` t2
+		# 	where
+		# 		t2.parent = t1.name and t2.account = %s and t1.docstatus=1
+		# 		and t1.posting_date >= %s and t1.posting_date <= %s
+		# 		and ifnull(t1.is_opening, 'No') = 'No' {0} {1}
+		# 	group by t2.account, t1.name
+		# 	order by t1.posting_date ASC, t1.name DESC
+		# """.format(condition, account_cond), (self.bank_account, self.from_date, self.to_date), as_dict=1)
 		journal_entries = frappe.db.sql("""
-			select
-				"Journal Entry" as payment_document, t1.name as payment_entry,
-				t1.cheque_no as cheque_number, t1.cheque_date,
-				sum(t2.debit_in_account_currency) as debit, sum(t2.credit_in_account_currency) as credit,
-				t1.posting_date, t2.against_account, t1.clearance_date, t2.account_currency
-			from
-				`tabJournal Entry` t1, `tabJournal Entry Account` t2
-			where
-				t2.parent = t1.name and t2.account = %s and t1.docstatus=1
-				and t1.posting_date >= %s and t1.posting_date <= %s
-				and ifnull(t1.is_opening, 'No') = 'No' {0} {1}
-			group by t2.account, t1.name
-			order by t1.posting_date ASC, t1.name DESC
-		""".format(condition, account_cond), (self.bank_account, self.from_date, self.to_date), as_dict=1)
+					select
+						"Journal Entry" as payment_document, t1.name as payment_entry,
+						t1.cheque_no as cheque_number, t1.cheque_date,
+						sum(t2.debit_in_account_currency) as debit, sum(t2.credit_in_account_currency) as credit,IF(t1.undeposited_clearance_date IS NULL,t1.clearance_date,t1.undeposited_clearance_date) as clearance_date	,
+						t1.posting_date, t2.against_account, t2.account_currency
+					from
+						`tabJournal Entry` t1, `tabJournal Entry Account` t2
+					where
+						t2.parent = t1.name and t2.account = %s and t1.docstatus=1
+						and t1.posting_date >= %s and t1.posting_date <= %s
+						and ifnull(t1.is_opening, 'No') = 'No' {0} {1}
+					group by t2.account, t1.name
+					order by t1.posting_date ASC, t1.name DESC
+				""".format(condition, account_cond), (self.bank_account, self.from_date, self.to_date), as_dict=1)
 
 		if self.bank_account_no:
 			condition = " and bank_account = %(bank_account_no)s"
