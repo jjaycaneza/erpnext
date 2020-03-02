@@ -343,21 +343,21 @@ def get_data():
 				},
 			]
 		},
-		{
-			"label": _("Expense Claims"),
-			"items": [
-				{
-					"type": "doctype",
-					"name": "Expense Claim",
-					"dependencies": ["Employee"]
-				},
-				{
-					"type": "doctype",
-					"name": "Employee Advance",
-					"dependencies": ["Employee"]
-				},
-			]
-		},
+		# {
+		# 	"label": _("Expense Claims"),
+		# 	"items": [
+		# 		{
+		# 			"type": "doctype",
+		# 			"name": "Expense Claim",
+		# 			"dependencies": ["Employee"]
+		# 		},
+		# 		{
+		# 			"type": "doctype",
+		# 			"name": "Employee Advance",
+		# 			"dependencies": ["Employee"]
+		# 		},
+		# 	]
+		# },
 		{
 			"label": _("Loans"),
 			"items": [
