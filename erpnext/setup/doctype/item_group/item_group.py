@@ -24,6 +24,19 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 	def autoname(self):
 		self.name = self.item_group_name
 
+		# Add item group code when adding new Item Group
+		item_group_count = frappe.db.sql("SELECT COUNT(*) AS ig_count FROM `tabItem Group`", as_dict=1)
+		if (item_group_count[0]['ig_count'] < 10):
+			ig_code = "IG_0000" + cstr(item_group_count[0]['ig_count'] + 1)
+		elif (item_group_count[0]['ig_count'] > 9):
+			ig_code = "IG_000" + cstr(item_group_count[0]['ig_count'] + 1)
+		elif (item_group_count[0]['ig_count'] > 99):
+			ig_code = "IG_00" + cstr(item_group_count[0]['ig_count'] + 1)
+		elif (item_group_count[0]['ig_count'] > 999):
+			ig_code = "IG_0" + cstr(item_group_count[0]['ig_count'] + 1)
+
+		self.item_group_code = ig_code
+
 	def validate(self):
 		super(ItemGroup, self).validate()
 

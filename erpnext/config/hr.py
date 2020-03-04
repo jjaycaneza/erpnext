@@ -343,21 +343,21 @@ def get_data():
 				},
 			]
 		},
-		{
-			"label": _("Expense Claims"),
-			"items": [
-				{
-					"type": "doctype",
-					"name": "Expense Claim",
-					"dependencies": ["Employee"]
-				},
-				{
-					"type": "doctype",
-					"name": "Employee Advance",
-					"dependencies": ["Employee"]
-				},
-			]
-		},
+		# {
+		# 	"label": _("Expense Claims"),
+		# 	"items": [
+		# 		{
+		# 			"type": "doctype",
+		# 			"name": "Expense Claim",
+		# 			"dependencies": ["Employee"]
+		# 		},
+		# 		{
+		# 			"type": "doctype",
+		# 			"name": "Employee Advance",
+		# 			"dependencies": ["Employee"]
+		# 		},
+		# 	]
+		# },
 		{
 			"label": _("Loans"),
 			"items": [
@@ -390,25 +390,6 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Shift Assignment",
-				},
-			]
-		},
-		{
-			"label": _("Fleet Management"),
-			"items": [
-				{
-					"type": "doctype",
-					"name": "Vehicle"
-				},
-				{
-					"type": "doctype",
-					"name": "Vehicle Log"
-				},
-				{
-					"type": "report",
-					"is_query_report": True,
-					"name": "Vehicle Expenses",
-					"doctype": "Vehicle"
 				},
 			]
 		},

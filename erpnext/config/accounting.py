@@ -266,6 +266,16 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Employee Advance",
+					"dependencies": ["Employee"]
+				},
+				{
+					"type": "doctype",
+					"name": "Expense Claim",
+					"dependencies": ["Employee"]
+				},
+				{
+					"type": "doctype",
 					"label": _("Expense Claim Batching List"),
 					"name": "Expense Claim Batching",
 				},
