@@ -275,7 +275,9 @@ class Subscription(Document):
 				"fixed_rate_label": self.get("si_subscription_details")[i].fixed_rate_label,
 				"fixed_rate": self.get("si_subscription_details")[i].fixed_rate,
 				"variable_rate_label": self.get("si_subscription_details")[i].variable_rate_label,
-				"variable_rate": self.get("si_subscription_details")[i].variable_rate
+				"variable_rate": self.get("si_subscription_details")[i].variable_rate,
+				"fix_order_no": self.get("si_subscription_details")[i].fix_order_no,
+				"var_order_no": self.get("si_subscription_details")[i].var_order_no,
 			})
 		# add additional 3 rows for Others 1-3
 		for i in range(3, 6):
@@ -285,7 +287,8 @@ class Subscription(Document):
 				"fixed_rate_label": None,
 				"fixed_rate": float(0),
 				"variable_rate_label": "Others " + str(i),
-				"variable_rate": float(0)
+				"variable_rate": float(0),
+				"var_order_no": i+7
 			})
 		# add rows for totals
 		for i in range(len(self.get("si_subscription_details")) - 3, len(self.get("si_subscription_details"))):
