@@ -350,8 +350,12 @@ frappe.ui.form.on('Stock Entry', {
 					args: args
 				},
 				callback: function(r) {
-					frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
-					frm.events.calculate_basic_amount(frm, item);
+					if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
+						frm.events.calculate_basic_amount(frm, item);
+					} else{
+						frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+						frm.events.calculate_basic_amount(frm, item);
+					}
 				}
 			});
 		}
