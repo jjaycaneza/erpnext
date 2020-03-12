@@ -382,16 +382,17 @@ class StockEntry(StockController):
 					+ self.work_order + ":" + ", ".join(other_ste), DuplicateEntryForWorkOrderError)
 
 	def set_incoming_rate(self):
-		for d in self.items:
-			if d.s_warehouse:
-				args = self.get_args_for_incoming_rate(d)
-				d.basic_rate = get_incoming_rate(args)
-			elif d.allow_zero_valuation_rate and not d.s_warehouse:
-				d.basic_rate = 0.0
-			elif d.t_warehouse and not d.basic_rate:
-				d.basic_rate = get_valuation_rate(d.item_code, d.t_warehouse,
-					self.doctype, self.name, d.allow_zero_valuation_rate,
-					currency=erpnext.get_company_currency(self.company))
+		if self.purpose not in ["Send to Branch", "Receive at Branch"]:
+			for d in self.items:
+				if d.s_warehouse:
+					args = self.get_args_for_incoming_rate(d)
+					d.basic_rate = get_incoming_rate(args)
+				elif d.allow_zero_valuation_rate and not d.s_warehouse:
+					d.basic_rate = 0.0
+				elif d.t_warehouse and not d.basic_rate:
+					d.basic_rate = get_valuation_rate(d.item_code, d.t_warehouse,
+						self.doctype, self.name, d.allow_zero_valuation_rate,
+						currency=erpnext.get_company_currency(self.company))
 
 	def set_actual_qty(self):
 		allow_negative_stock = cint(frappe.db.get_value("Stock Settings", None, "allow_negative_stock"))
@@ -428,6 +429,7 @@ class StockEntry(StockController):
 				d.serial_no = transferred_serial_no
 
 	def get_stock_and_rate(self):
+		print("Conclusion 5")
 		self.set_work_order_details()
 		self.set_transfer_qty()
 		self.set_actual_qty()
@@ -697,7 +699,7 @@ class StockEntry(StockController):
 					pro_doc.run_method("update_planned_qty")
 
 	def get_item_details(self, args=None, for_update=False):
-		item = frappe.db.sql("""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
+		item = frappe.db.sql("""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_short_name, i.item_group,
 				i.has_batch_no, i.sample_quantity, i.has_serial_no,
 				id.expense_account, id.buying_cost_center
 			from `tabItem` i LEFT JOIN `tabItem Default` id ON i.name=id.parent and id.company=%s
@@ -718,7 +720,7 @@ class StockEntry(StockController):
 			'stock_uom'				: item.stock_uom,
 			'description'		  	: item.description,
 			'image'					: item.image,
-			'item_name' 		  	: item.item_name,
+			'item_name' 		  	: item.item_short_name,
 			'cost_center'			: get_default_cost_center(args, item, item_group_defaults, brand_defaults, self.company),
 			'qty'					: args.get("qty"),
 			'transfer_qty'			: args.get('qty'),
