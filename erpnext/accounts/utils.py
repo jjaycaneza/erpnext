@@ -445,8 +445,6 @@ def update_reference_in_journal_entry(d, jv_obj):
 		ch.is_advance = cstr(jvd[0]["is_advance"])
 		ch.docstatus = 1
 
-	# print(jv_obj.accounts[0])
-
 	# will work as update after submit
 	jv_obj.flags.ignore_validate_update_after_submit = True
 	jv_obj.save(ignore_permissions=True)
