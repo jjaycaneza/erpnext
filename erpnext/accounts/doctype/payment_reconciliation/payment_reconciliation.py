@@ -7,7 +7,7 @@ from frappe.utils import flt, today
 from frappe import msgprint, _
 from frappe.model.document import Document
 from erpnext.accounts.utils import (get_outstanding_invoices,
-	update_reference_in_payment_entry, reconcile_against_document, get_bu_branch_from_invoice)
+	update_reference_in_payment_entry, reconcile_against_document)
 from erpnext.controllers.accounts_controller import get_advance_payment_entries
 
 class PaymentReconciliation(Document):
@@ -350,3 +350,7 @@ def reconcile_dr_cr_note(dr_cr_notes):
 		})
 
 		jv.submit()
+
+
+def get_bu_branch_from_invoice(voucher_type, voucher_no):
+	return frappe.get_list(voucher_type, {"name": voucher_no}, ['branch',  'business_units'])[0]
