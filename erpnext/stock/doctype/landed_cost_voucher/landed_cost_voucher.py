@@ -77,8 +77,12 @@ class LandedCostVoucher(Document):
 
 	def validate_applicable_charges_for_item(self):
 		if (self.landed_cost_voucher_type == "Update Fresh Goods Price"):
+			print("Im hered")
+			print(self.landed_cost_voucher_type)
 			pass
 		else:
+			print("IM HERE NA")
+			print(self.landed_cost_voucher_type)
 			based_on = self.distribute_charges_based_on.lower()
 
 			total = sum([flt(d.get(based_on)) for d in self.get("items")])
@@ -176,10 +180,10 @@ class LandedCostVoucher(Document):
 		for item in self.items:
 			item = item.as_dict()
 			try:
-				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document']),as_dict=True)
+				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document'],item['item_code']),as_dict=True)
 				po_number = frappe.db.sql("SELECT po_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
-				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
-							  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number']), as_dict=True)
+				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
+							  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number'],item['item_code']), as_dict=True)
 				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Order` WHERE name = %s",(po_number[0]['po_number']),as_dict=True)
 
 				if document_type[0]['document_type'] == "Inventory Transfer - Fresh":
@@ -187,10 +191,10 @@ class LandedCostVoucher(Document):
 					so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
 					dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
 
-					frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
-							  (item['updated_rate'], item['updated_rate'], so_code[0]['name']), as_dict=True)
-					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s",
-							  (item['updated_rate'], item['updated_rate'], dn_code[0]['name']), as_dict=True)
+					frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
+							  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)
+					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
+							  (item['updated_rate'], item['updated_rate'], dn_code[0]['name'],item['item_code']), as_dict=True)
 					dn_list.append( dn_code[0]['name'])
 
 			except:
