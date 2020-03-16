@@ -75,9 +75,16 @@ class Item(WebsiteGenerator):
 	# SET CUSTOM NAMING SERIES
 	def set_naming_series(self):
 		itm_group = self.parent_item_group
+
+		if self.is_fixed_asset == 1:
+			asset_item_series = frappe.db.get_value("Asset Item Naming", {"asset_category": self.asset_category}, 'series')
+			print(asset_item_series)
+			self.naming_series = asset_item_series
+
 		if itm_group in self.get_group_list():
 			series = self.get_item_series(itm_group)
 			self.naming_series = series
+			print(series)
 		else:
 			itm_group_2 = frappe.get_value("Item Group", itm_group, 'parent_item_group')
 			if itm_group_2 == "Department Store" or itm_group_2 == "Grocery":
@@ -87,6 +94,7 @@ class Item(WebsiteGenerator):
 	def get_group_list(self):
 		group_list = []
 		item_groups = frappe.get_list("Item Naming", {"parent": "Naming Convention"}, 'item_group')
+		print(item_groups)
 		for group in item_groups:
 			group_list.append(group.item_group)
 
