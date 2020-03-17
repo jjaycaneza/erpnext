@@ -37,6 +37,8 @@ class ReceivablePayableReport(object):
 		})
 
 		columns += [_(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
+		if party_naming_by == "Naming Series":
+			columns += [args.get("party_type") + " Name::110"]
 
 		if args.get("party_type") == 'Customer':
 			columns.append({
@@ -46,10 +48,10 @@ class ReceivablePayableReport(object):
 				"options":"Contact",
 				"width": 100
 			})
-			columns.append(_("Customer Code") + "::110")
 
-		if party_naming_by == "Naming Series":
-			columns += [args.get("party_type") + " Name::110"]
+
+
+			columns.append(_("Customer Code") + "::110")
 
 		columns.append({
 			"label": _("Voucher Type"),
