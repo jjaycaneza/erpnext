@@ -12,6 +12,7 @@ from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 class LandedCostVoucher(Document):
 	def get_items_from_purchase_receipts(self):
 		self.set("items", [])
+
 		for pr in self.get("purchase_receipts"):
 			if pr.receipt_document_type and pr.receipt_document:
 				pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
@@ -35,6 +36,9 @@ class LandedCostVoucher(Document):
 					item.business_units = d.business_units
 					item.branch = d.branch
 					item.cost_center = d.cost_center
+		self.get_items_in_parent_pr()
+
+
 
 	def validate(self):
 		self.check_mandatory()
@@ -181,28 +185,46 @@ class LandedCostVoucher(Document):
 			item = item.as_dict()
 			try:
 				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document'],item['item_code']),as_dict=True)
-				po_number = frappe.db.sql("SELECT po_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
-				frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-							  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number'],item['item_code']), as_dict=True)
-				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Order` WHERE name = %s",(po_number[0]['po_number']),as_dict=True)
-
+				dn_number = frappe.db.sql("SELECT dn_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
+				# frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
+				# 			  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number'],item['item_code']), as_dict=True)
+				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Receipt` WHERE name = %s",(item['receipt_document']),as_dict=True)
+				print(dn_number)
 				if document_type[0]['document_type'] == "Inventory Transfer - Fresh":
 
-					so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
-					dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
+					# so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
+					# dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
 
-					frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-							  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)
+					# frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
+					# 		  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)
 					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-							  (item['updated_rate'], item['updated_rate'], dn_code[0]['name'],item['item_code']), as_dict=True)
-					dn_list.append( dn_code[0]['name'])
+							  (item['updated_rate'], item['updated_rate'], dn_number[0]['dn_number'],item['item_code']), as_dict=True)
+					dn_list.append( dn_number[0]['dn_number'])
 
 			except:
-				frappe.throw("Item Price not updated	")
+				frappe.throw("Item Price not updated")
 		return dn_list
 	def update_back_to_zero(self):
 		for i in range(len(self.items)):
 			self.items[i].updated_rate = 0
 
+	def get_items_in_parent_pr(self):
+		self.set("purchase_receipt_item", [])
+		pr = self.parent_pr
+		pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
+	    					pr_item.qty, pr_item.base_rate, pr_item.base_amount, pr_item.name, pr_item.cost_center,pr_item.business_units,pr_item.branch,pr_item.cost_center
+	    					from `tab{doctype} Item` pr_item where parent = %s
+	    					and exists(select name from tabItem where name = pr_item.item_code and is_stock_item = 1)
+	    					""".format(doctype="Purchase Receipt"),pr, as_dict=True)
+
+		for d in pr_items:
+			print(d)
+			item = self.append("purchase_receipt_item")
+			item.item_code = d.item_code
+			item.description = d.description
+			item.rate = d.base_rate
+			item.receipt_document_type = "Purchase Receipt"
+			item.receipt_document = pr
+			item.purchase_receipt_item = d.name
 
 
