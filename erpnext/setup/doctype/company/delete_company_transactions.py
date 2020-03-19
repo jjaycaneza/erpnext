@@ -27,7 +27,8 @@ def delete_company_transactions(company_name):
 		if doctype not in ("Account", "Cost Center", "Warehouse", "Budget",
 			"Party Account", "Employee", "Sales Taxes and Charges Template",
 			"Purchase Taxes and Charges Template", "POS Profile", 'BOM',"Business Units",
-						   "Bank Account","Expense Claim Type","PR Reason Code","Reason Code","Naming Convention Settings","POS Import Settings","Department"):
+						   "Bank Account","Expense Claim Type","PR Reason Code","Reason Code","Naming Convention Settings",
+						   "POS Import Settings","Department","X Transaction Settings"):
 				delete_for_doctype(doctype, company_name)
 
 	# reset company values
