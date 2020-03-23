@@ -255,6 +255,9 @@ frappe.ui.form.on('Stock Entry', {
 		frm.trigger('validate_purpose_consumption');
 		frm.fields_dict.items.grid.refresh();
 		frm.cscript.toggle_related_fields(frm.doc);
+		if(cur_frm.doc.purpose == "Receive at Warehouse"){
+			cur_frm.set_df_property("outgoing_stock_entry", "reqd", 1);
+		}
 	},
 
 	validate_purpose_consumption: function(frm) {
