@@ -255,6 +255,16 @@ class Subscription(Document):
 		invoice.invoice_amount = self.invoice_total
 		invoice.net_without_penalty = self.get("si_subscription_totals")[6].total
 
+		if self.sales_of_pos == 1:
+			rate_label = ["Basic Rate(BR)", "Minimum Guranteed Rate(MGR)"]
+			rates = [(self.basic_rate/1.12), (self.total_amount_on_plan/1.12)]
+			for i in range(2):
+				invoice.append("pos_calculation", {
+					"rate_label": rate_label[i],
+					"rate": rates[i],
+					"percent": 3,
+					"total": rates[i],
+				})
 
 		if self.electricity == 1:
 			invoice.append("variables_calculations", {
