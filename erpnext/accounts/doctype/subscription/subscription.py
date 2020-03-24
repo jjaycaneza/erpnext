@@ -255,6 +255,11 @@ class Subscription(Document):
 		invoice.invoice_amount = self.invoice_total
 		invoice.net_without_penalty = self.get("si_subscription_totals")[6].total
 
+		if self.sales_of_pos == 1:
+			invoice.append("pos_calculation", {
+				"br": self.basic_rate/1.12,
+				"mgr": self.total_amount_on_plan/1.12,
+			})
 
 		if self.electricity == 1:
 			invoice.append("variables_calculations", {
