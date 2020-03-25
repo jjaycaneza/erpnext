@@ -36,7 +36,7 @@ class LandedCostVoucher(Document):
 					item.business_units = d.business_units
 					item.branch = d.branch
 					item.cost_center = d.cost_center
-		self.get_items_in_parent_pr()
+		self.get_items_from_parent_pr()
 
 
 
@@ -208,7 +208,7 @@ class LandedCostVoucher(Document):
 		for i in range(len(self.items)):
 			self.items[i].updated_rate = 0
 
-	def get_items_in_parent_pr(self):
+	def get_items_from_parent_pr(self):
 		self.set("purchase_receipt_item", [])
 		pr = self.parent_pr
 		pr_items = frappe.db.sql("""select pr_item.item_code, pr_item.description,
