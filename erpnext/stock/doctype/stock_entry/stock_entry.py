@@ -1239,7 +1239,8 @@ class StockEntry(StockController):
 						 to fullfill Sales Order {2}.").format(item.item_code, sr, sales_order))
 
 	def update_transferred_qty(self):
-		if self.purpose == 'Receive at Warehouse' or self.purpose == 'Receive at Branch':
+		lock = ['Receive at Warehouse', 'Receive at Branch']
+		if self.purpose in lock:
 			stock_entries = {}
 			stock_entries_child_list = []
 			for d in self.items:
