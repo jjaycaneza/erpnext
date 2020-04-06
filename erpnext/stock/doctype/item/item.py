@@ -64,12 +64,46 @@ class Item(WebsiteGenerator):
 					template_item_name = frappe.db.get_value("Item", self.variant_of, "item_name")
 					self.item_code = make_variant_item_code(self.variant_of, template_item_name, self)
 			else:
-				from frappe.model.naming import set_name_by_naming_series
-				set_name_by_naming_series(self)
-				self.item_code = self.name
+				# from frappe.model.naming import set_name_by_naming_series
+				# set_name_by_naming_series(self)
+				self.set_naming_series()
+				# self.item_code = self.name
 
 		self.item_code = strip(self.item_code)
 		self.name = self.item_code
+
+	# SET CUSTOM NAMING SERIES
+	def set_naming_series(self):
+		itm_group = self.parent_item_group
+
+		if self.is_fixed_asset == 1:
+			asset_item_series = frappe.db.get_value("Asset Item Naming", {"asset_category": self.asset_category}, 'series')
+			print(asset_item_series)
+			self.naming_series = asset_item_series
+
+		if itm_group in self.get_group_list():
+			series = self.get_item_series(itm_group)
+			self.naming_series = series
+			print(series)
+		else:
+			itm_group_2 = frappe.get_value("Item Group", itm_group, 'parent_item_group')
+			if itm_group_2 == "Department Store" or itm_group_2 == "Grocery":
+				series = self.get_item_series(itm_group_2)
+				self.naming_series = series
+
+	def get_group_list(self):
+		group_list = []
+		item_groups = frappe.get_list("Item Naming", {"parent": "Naming Convention"}, 'item_group')
+		print(item_groups)
+		for group in item_groups:
+			group_list.append(group.item_group)
+
+		return group_list
+
+	def get_item_series(self, itm_grp):
+		itm_grp = frappe.db.get_value("Item Naming", {'item_group': itm_grp}, "series")
+		return itm_grp
+	# END CUSTOM
 
 	def before_insert(self):
 		if not self.description:
@@ -88,6 +122,9 @@ class Item(WebsiteGenerator):
 			self.set_opening_stock()
 
 	def validate(self):
+		# CUSTOM SET ITEM CODE
+		self.item_code = self.name
+
 		super(Item, self).validate()
 
 		if not self.item_name:

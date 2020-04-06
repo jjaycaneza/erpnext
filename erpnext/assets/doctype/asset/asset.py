@@ -444,6 +444,8 @@ def make_purchase_invoice(asset, item_code, gross_purchase_amount, company, post
 	pi.currency = frappe.get_cached_value('Company',  company,  "default_currency")
 	pi.set_posting_time = 1
 	pi.posting_date = posting_date
+	pi.document_type = "Fixed Assets"
+	pi.apply_tds = 1
 	pi.append("items", {
 		"item_code": item_code,
 		"is_fixed_asset": 1,

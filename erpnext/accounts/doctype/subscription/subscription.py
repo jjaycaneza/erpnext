@@ -255,6 +255,11 @@ class Subscription(Document):
 		invoice.invoice_amount = self.invoice_total
 		invoice.net_without_penalty = self.get("si_subscription_totals")[6].total
 
+		if self.sales_of_pos == 1:
+			invoice.append("pos_calculation", {
+				"br": self.basic_rate/1.12,
+				"mgr": self.total_amount_on_plan/1.12,
+			})
 
 		if self.electricity == 1:
 			invoice.append("variables_calculations", {
@@ -275,7 +280,9 @@ class Subscription(Document):
 				"fixed_rate_label": self.get("si_subscription_details")[i].fixed_rate_label,
 				"fixed_rate": self.get("si_subscription_details")[i].fixed_rate,
 				"variable_rate_label": self.get("si_subscription_details")[i].variable_rate_label,
-				"variable_rate": self.get("si_subscription_details")[i].variable_rate
+				"variable_rate": self.get("si_subscription_details")[i].variable_rate,
+				"fix_order_no": self.get("si_subscription_details")[i].fix_order_no,
+				"var_order_no": self.get("si_subscription_details")[i].var_order_no,
 			})
 		# add additional 3 rows for Others 1-3
 		for i in range(3, 6):
@@ -285,7 +292,8 @@ class Subscription(Document):
 				"fixed_rate_label": None,
 				"fixed_rate": float(0),
 				"variable_rate_label": "Others " + str(i),
-				"variable_rate": float(0)
+				"variable_rate": float(0),
+				"var_order_no": i+7
 			})
 		# add rows for totals
 		for i in range(len(self.get("si_subscription_details")) - 3, len(self.get("si_subscription_details"))):

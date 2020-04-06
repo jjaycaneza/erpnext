@@ -389,6 +389,11 @@ def update_reference_in_journal_entry(d, jv_obj):
 	"""
 		Updates against document, if partial amount splits into rows
 	"""
+	bu_branch = get_bu_branch_from_invoice(d['voucher_type'], d['voucher_no'])
+
+	if jv_obj.branch != bu_branch.branch:
+		jv_obj.is_single_branch = 0
+
 	jv_detail = jv_obj.get("accounts", {"name": d["voucher_detail_no"]})[0]
 	jv_detail.set(d["dr_or_cr"], d["allocated_amount"])
 	jv_detail.set('debit' if d['dr_or_cr']=='debit_in_account_currency' else 'credit',
@@ -399,6 +404,8 @@ def update_reference_in_journal_entry(d, jv_obj):
 
 	jv_detail.set("reference_type", d["against_voucher_type"])
 	jv_detail.set("reference_name", d["against_voucher"])
+	jv_detail.set("branch", bu_branch.branch)
+	jv_detail.set("business_units", bu_branch.business_units)
 
 	if d['allocated_amount'] < d['unadjusted_amount']:
 		jvd = frappe.db.sql("""
@@ -412,6 +419,10 @@ def update_reference_in_journal_entry(d, jv_obj):
 
 		# new entry with balance amount
 		ch = jv_obj.append("accounts")
+		# branch and business units
+		ch.business_units = bu_branch.business_units
+		ch.branch = bu_branch.branch
+
 		ch.account = d['account']
 		ch.account_type = jvd[0]['account_type']
 		ch.account_currency = jvd[0]['account_currency']
@@ -883,3 +894,7 @@ def get_allow_cost_center_in_entry_of_bs_account():
 	def generator():
 		return cint(frappe.db.get_value('Accounts Settings', None, 'allow_cost_center_in_entry_of_bs_account'))
 	return frappe.local_cache("get_allow_cost_center_in_entry_of_bs_account", (), generator, regenerate_if_none=True)
+
+
+def get_bu_branch_from_invoice(voucher_type, voucher_no):
+	return frappe.get_list(voucher_type, {"name": voucher_no}, ['branch',  'business_units'])[0]

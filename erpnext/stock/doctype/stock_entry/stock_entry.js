@@ -255,6 +255,9 @@ frappe.ui.form.on('Stock Entry', {
 		frm.trigger('validate_purpose_consumption');
 		frm.fields_dict.items.grid.refresh();
 		frm.cscript.toggle_related_fields(frm.doc);
+		if(cur_frm.doc.purpose == "Receive at Warehouse"){
+			cur_frm.set_df_property("outgoing_stock_entry", "reqd", 1);
+		}
 	},
 
 	validate_purpose_consumption: function(frm) {
@@ -350,8 +353,12 @@ frappe.ui.form.on('Stock Entry', {
 					args: args
 				},
 				callback: function(r) {
-					frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
-					frm.events.calculate_basic_amount(frm, item);
+					if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
+						frm.events.calculate_basic_amount(frm, item);
+					} else{
+						frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+						frm.events.calculate_basic_amount(frm, item);
+					}
 				}
 			});
 		}
@@ -849,6 +856,8 @@ erpnext.stock.StockEntry = erpnext.stock.StockController.extend({
 		this.frm.fields_dict["items"].grid.set_column_disp("additional_cost", doc.purpose!='Material Issue');
 		this.frm.toggle_reqd("outgoing_stock_entry",
 			doc.purpose == 'Receive at Warehouse' ? 1: 0);
+		this.frm.toggle_reqd("outgoing_stock_entry",
+			doc.purpose == 'Receive at Branch' ? 1: 0);
 	},
 
 	supplier: function(doc) {

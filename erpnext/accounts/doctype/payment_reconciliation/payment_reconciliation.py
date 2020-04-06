@@ -315,10 +315,15 @@ def reconcile_dr_cr_note(dr_cr_notes):
 		reconcile_dr_or_cr = ('debit_in_account_currency'
 			if d.dr_or_cr == 'credit_in_account_currency' else 'credit_in_account_currency')
 
+		bu_branch = get_bu_branch_from_invoice(d.voucher_type, d.voucher_no)
+
 		jv = frappe.get_doc({
 			"doctype": "Journal Entry",
 			"voucher_type": voucher_type,
 			"posting_date": today(),
+			"business_units": bu_branch.business_units,
+			"branch": bu_branch.branch,
+			"is_single_branch": 1,
 			"accounts": [
 				{
 					'account': d.account,
@@ -326,7 +331,9 @@ def reconcile_dr_cr_note(dr_cr_notes):
 					'party_type': d.party_type,
 					d.dr_or_cr: abs(d.allocated_amount),
 					'reference_type': d.against_voucher_type,
-					'reference_name': d.against_voucher
+					'reference_name': d.against_voucher,
+					'branch': bu_branch.branch,
+					'business_units': bu_branch.business_units,
 				},
 				{
 					'account': d.account,
@@ -335,9 +342,15 @@ def reconcile_dr_cr_note(dr_cr_notes):
 					reconcile_dr_or_cr: (abs(d.allocated_amount)
 						if abs(d.unadjusted_amount) > abs(d.allocated_amount) else abs(d.unadjusted_amount)),
 					'reference_type': d.voucher_type,
-					'reference_name': d.voucher_no
+					'reference_name': d.voucher_no,
+					'branch': bu_branch.branch,
+					'business_units': bu_branch.business_units,
 				}
 			]
 		})
 
 		jv.submit()
+
+
+def get_bu_branch_from_invoice(voucher_type, voucher_no):
+	return frappe.get_list(voucher_type, {"name": voucher_no}, ['branch',  'business_units'])[0]

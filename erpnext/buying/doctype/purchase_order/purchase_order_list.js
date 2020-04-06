@@ -1,6 +1,6 @@
 frappe.listview_settings['Purchase Order'] = {
 	add_fields: ["base_grand_total", "company", "currency", "supplier",
-		"supplier_name", "per_received", "per_billed", "status", "has_pilferage_or_underservedd"],
+		"supplier_name", "per_received", "per_billed", "status", "has_pilferage_or_underserved"],
 	get_indicator: function (doc) {
 		if (doc.status === "Closed") {
 			return [__("Closed"), "green", "status,=,Closed"];
