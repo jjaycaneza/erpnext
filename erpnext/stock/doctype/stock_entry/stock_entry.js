@@ -353,12 +353,16 @@ frappe.ui.form.on('Stock Entry', {
 					args: args
 				},
 				callback: function(r) {
-					if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
-						frm.events.calculate_basic_amount(frm, item);
-					} else{
-						frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
-						frm.events.calculate_basic_amount(frm, item);
-					}
+					// For future use, so the basic rate from PO won't be override by valuation rate
+					// if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
+					// 	frm.events.calculate_basic_amount(frm, item);
+					// } else{
+					// 	frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+					// 	frm.events.calculate_basic_amount(frm, item);
+					// }
+
+					frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+					frm.events.calculate_basic_amount(frm, item);
 				}
 			});
 		}
@@ -450,6 +454,7 @@ frappe.ui.form.on('Stock Entry Detail', {
 	qty: function(frm, cdt, cdn) {
 		frm.events.set_serial_no(frm, cdt, cdn, () => {
 			frm.events.set_basic_rate(frm, cdt, cdn);
+			console.log("Core Trigger");
 		});
 	},
 
