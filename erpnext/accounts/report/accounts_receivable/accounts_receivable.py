@@ -51,7 +51,7 @@ class ReceivablePayableReport(object):
 
 
 
-			columns.append(_("Customer Code") + "::110")
+			columns.append(_("BP Code") + "::110")
 
 		columns.append({
 			"label": _("Voucher Type"),

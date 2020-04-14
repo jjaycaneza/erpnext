@@ -178,6 +178,28 @@ def get_data():
 			]
 		},
 		{
+			"label": _("Bill of Materials"),
+			"icon": "fa fa-wrench",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "BOM",
+				},
+				{
+					"type": "doctype",
+					"name": "Work Order",
+				},
+				{
+					"type": "doctype",
+					"name": "Job Card",
+				},
+				{
+					"type": "doctype",
+					"name": "Production Plan",
+				},
+			]
+		},
+		{
 			"label": _("Serial No and Batch"),
 			"items": [
 				{
