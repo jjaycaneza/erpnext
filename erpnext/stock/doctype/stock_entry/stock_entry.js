@@ -14,15 +14,15 @@ frappe.ui.form.on('Stock Entry', {
 			}
 		});
 
-		frm.set_query('outgoing_stock_entry', function() {
-			return {
-				filters: [
-					['Stock Entry', 'docstatus', '=', 1],
-					['Stock Entry', 'per_transferred', '<','100'],
-					['Stock Entry', 'purpose', 'in', 'Send to Warehouse, Send to Branch']
-				]
-			}
-		});
+		// frm.set_query('outgoing_stock_entry', function() {
+		// 	return {
+		// 		filters: [
+		// 			['Stock Entry', 'docstatus', '=', 1],
+		// 			['Stock Entry', 'per_transferred', '<','100'],
+		// 			['Stock Entry', 'purpose', 'in', 'Send to Warehouse, Send to Branch']
+		// 		]
+		// 	}
+		// });
 
 		frappe.db.get_value('Stock Settings', {name: 'Stock Settings'}, 'sample_retention_warehouse', (r) => {
 			if (r.sample_retention_warehouse) {
@@ -454,7 +454,6 @@ frappe.ui.form.on('Stock Entry Detail', {
 	qty: function(frm, cdt, cdn) {
 		frm.events.set_serial_no(frm, cdt, cdn, () => {
 			frm.events.set_basic_rate(frm, cdt, cdn);
-			console.log("Core Trigger");
 		});
 	},
 
