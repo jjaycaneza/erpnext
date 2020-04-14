@@ -186,17 +186,21 @@ class LandedCostVoucher(Document):
 			try:
 				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document'],item['item_code']),as_dict=True)
 				dn_number = frappe.db.sql("SELECT dn_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
-				# frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-				# 			  (item['updated_rate'],item['updated_rate'], po_number[0]['po_number'],item['item_code']), as_dict=True)
+
+				cur_po = frappe.get_value("Purchase Receipt",item['receipt_document'],"po_number")
+				if cur_po:
+					frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'], cur_po,item['item_code']), as_dict=True)
+
 				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Receipt` WHERE name = %s",(item['receipt_document']),as_dict=True)
 				print(dn_number)
 				if document_type[0]['document_type'] == "Inventory Transfer - Fresh":
-
+					print("Kauslod dari")
 					# so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
 					# dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
 
 					# frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-					# 		  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)
+					# 		  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)'
+					print(item)
 					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
 							  (item['updated_rate'], item['updated_rate'], dn_number[0]['dn_number'],item['item_code']), as_dict=True)
 					dn_list.append( dn_number[0]['dn_number'])
