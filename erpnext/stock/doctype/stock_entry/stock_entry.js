@@ -14,15 +14,15 @@ frappe.ui.form.on('Stock Entry', {
 			}
 		});
 
-		frm.set_query('outgoing_stock_entry', function() {
-			return {
-				filters: [
-					['Stock Entry', 'docstatus', '=', 1],
-					['Stock Entry', 'per_transferred', '<','100'],
-					['Stock Entry', 'purpose', 'in', 'Send to Warehouse, Send to Branch']
-				]
-			}
-		});
+		// frm.set_query('outgoing_stock_entry', function() {
+		// 	return {
+		// 		filters: [
+		// 			['Stock Entry', 'docstatus', '=', 1],
+		// 			['Stock Entry', 'per_transferred', '<','100'],
+		// 			['Stock Entry', 'purpose', 'in', 'Send to Warehouse, Send to Branch']
+		// 		]
+		// 	}
+		// });
 
 		frappe.db.get_value('Stock Settings', {name: 'Stock Settings'}, 'sample_retention_warehouse', (r) => {
 			if (r.sample_retention_warehouse) {
@@ -353,12 +353,16 @@ frappe.ui.form.on('Stock Entry', {
 					args: args
 				},
 				callback: function(r) {
-					if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
-						frm.events.calculate_basic_amount(frm, item);
-					} else{
-						frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
-						frm.events.calculate_basic_amount(frm, item);
-					}
+					// For future use, so the basic rate from PO won't be override by valuation rate
+					// if(cur_frm.doc.stock_entry_type === 'Send to Branch' || cur_frm.doc.stock_entry_type === 'Receive at Branch'){
+					// 	frm.events.calculate_basic_amount(frm, item);
+					// } else{
+					// 	frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+					// 	frm.events.calculate_basic_amount(frm, item);
+					// }
+
+					frappe.model.set_value(cdt, cdn, 'basic_rate', (r.message || 0.0));
+					frm.events.calculate_basic_amount(frm, item);
 				}
 			});
 		}

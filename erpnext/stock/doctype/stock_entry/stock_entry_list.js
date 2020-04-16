@@ -5,13 +5,14 @@ frappe.listview_settings['Stock Entry'] = {
 		if (doc.docstatus === 0) {
 			return [__("Draft"), "red", "docstatus,=,0"];
 
-		} else if (doc.purpose === 'Send to Warehouse' || doc.purpose === 'Send to Branch' && doc.per_transferred < 100) {
+		} else if (doc.purpose == 'Send to Warehouse' && doc.per_transferred < 100 || doc.purpose == 'Send to Branch' && doc.per_transferred < 100) {
 			// not delivered & overdue
 			return [__("Goods In Transit"), "grey", "per_transferred,<,100"];
 
-		} else if (doc.purpose === 'Send to Warehouse' || doc.purpose === 'Send to Branch' && doc.per_transferred === 100) {
+		} else if (doc.purpose == 'Send to Warehouse' && doc.per_transferred === 100 || doc.purpose == 'Send to Branch' && doc.per_transferred === 100) {
 			return [__("Goods Transferred"), "green", "per_transferred,=,100"];
-		} else if (doc.docstatus === 2) {
+		}
+		else if (doc.docstatus === 2) {
 			return [__("Canceled"), "red", "docstatus,=,2"];
 		} else {
 			return [__("Submitted"), "blue", "docstatus,=,1"];
