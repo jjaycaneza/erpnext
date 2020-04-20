@@ -153,7 +153,7 @@ class LandedCostVoucher(Document):
 
 			# print(doc.as_dict())
 			self.update_last_purchase_rate()
-			dn_list = self.update_item_price_in_pr_po()
+			self.update_item_price_in_pr_po()
 
 
 
@@ -180,34 +180,31 @@ class LandedCostVoucher(Document):
 			except:
 				frappe.throw("Last Purchase Rate not Updated")
 	def update_item_price_in_pr_po(self):
-		dn_list = []
+
 		for item in self.items:
 			item = item.as_dict()
 			try:
+
 				frappe.db.sql("UPDATE `tabPurchase Receipt Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'],item['receipt_document'],item['item_code']),as_dict=True)
 				dn_number = frappe.db.sql("SELECT dn_number from `tabPurchase Receipt` WHERE name = %s AND docstatus = 1",( item['receipt_document']),as_dict=True)
 
 				cur_po = frappe.get_value("Purchase Receipt",item['receipt_document'],"po_number")
 				if cur_po:
 					frappe.db.sql("UPDATE `tabPurchase Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",(item['updated_rate'],item['updated_rate'], cur_po,item['item_code']), as_dict=True)
-
+					# self.update_cost_comparison_table( "Purchase Order",cur_po,item['item_code'], po_price, pr_price, dn_price)
 				document_type = frappe.db.sql("SELECT document_type from `tabPurchase Receipt` WHERE name = %s",(item['receipt_document']),as_dict=True)
-				print(dn_number)
+
 				if document_type[0]['document_type'] == "Inventory Transfer - Fresh":
 					print("Kauslod dari")
-					# so_code =  frappe.db.sql("SELECT name from `tabSales Order` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']),as_dict=True)
-					# dn_code = frappe.db.sql("SELECT name from `tabDelivery Note` WHERE po_number = %s AND docstatus = 1 ",(po_number[0]['po_number']), as_dict=True)
-
-					# frappe.db.sql("UPDATE `tabSales Order Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
-					# 		  (item['updated_rate'], item['updated_rate'], so_code[0]['name'],item['item_code']), as_dict=True)'
-					print(item)
 					frappe.db.sql("UPDATE `tabDelivery Note Item` SET rate = %s, amount = %s * qty  WHERE parent = %s AND item_code = %s",
 							  (item['updated_rate'], item['updated_rate'], dn_number[0]['dn_number'],item['item_code']), as_dict=True)
-					dn_list.append( dn_number[0]['dn_number'])
+					# self.update_cost_comparison_table( "Delivery Note", dn_number[0]['dn_number'],item['item_code'], po_price, pr_price, dn_price)
+
+					
 
 			except:
 				frappe.throw("Item Price not updated")
-		return dn_list
+
 	def update_back_to_zero(self):
 		for i in range(len(self.items)):
 			self.items[i].updated_rate = 0
@@ -230,5 +227,9 @@ class LandedCostVoucher(Document):
 			item.receipt_document_type = "Purchase Receipt"
 			item.receipt_document = pr
 			item.purchase_receipt_item = d.name
+
+
+
+
 
 
