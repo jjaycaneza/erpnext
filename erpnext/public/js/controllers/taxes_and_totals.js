@@ -118,7 +118,25 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 	initialize_taxes: function() {
 		var me = this;
 
+		//Custom script (to remove Input tax when Sales Invoices Taxes and Charges Doctype
+		console.log(this.frm.doc["taxes"]);
+		var to_del = [];
+		if(this.frm.doc["taxes"]){
+			for(var i =0;i < this.frm.doc["taxes"].length; i++){
+				if(this.frm.doc["taxes"][i].doctype == "Sales Taxes and Charges" && this.frm.doc["taxes"][i].account_head == "2202 - Input Tax - G"){
+					to_del.push(i);
+				}else if(this.frm.doc["taxes"][i].doctype == "Purchase Taxes and Charges" && this.frm.doc["taxes"][i].account_head == "2201 - Output Tax - G"){
+					to_del.push(i);
+				}
+			}
+			for(var i =0; i < to_del.length;i++){
+				this.frm.doc["taxes"].splice(i,1);
+			}
+		}
+
+
 		$.each(this.frm.doc["taxes"] || [], function(i, tax) {
+
 			tax.item_wise_tax_detail = {};
 			var tax_fields = ["total", "tax_amount_after_discount_amount",
 				"tax_amount_for_current_item", "grand_total_for_current_item",
@@ -129,7 +147,7 @@ erpnext.taxes_and_totals = erpnext.payments.extend({
 				tax_fields.push("tax_amount");
 			}
 
-			$.each(tax_fields, function(i, fieldname) { tax[fieldname] = 0.0; });
+			$.each(tax_fields, function(i, fieldname) {	 tax[fieldname] = 0.0; });
 
 			if (!this.discount_amount_applied && cur_frm) {
 				cur_frm.cscript.validate_taxes_and_charges(tax.doctype, tax.name);
