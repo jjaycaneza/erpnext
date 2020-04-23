@@ -36,7 +36,7 @@
   },
   {
    "fieldname": "snipe_api",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "API"
   },
   {
@@ -45,7 +45,7 @@
   }
  ],
  "issingle": 1,
- "modified": "2020-04-22 15:14:32.430856",
+ "modified": "2020-04-23 19:22:11.796606",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Settings",
