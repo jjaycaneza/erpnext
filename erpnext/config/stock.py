@@ -43,6 +43,20 @@ def get_data():
 			]
 		},
 		{
+			"label": _("Fresh Operation"),
+			"icon": "fa fa-star",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "X Transaction",
+					"onboard": 1,
+					"dependencies": ["Item", "Supplier"],
+					"description": _("X Transaction "),
+				},
+
+			]
+		},
+		{
 			"label": _("Stock Reports"),
 			"items": [
 				{

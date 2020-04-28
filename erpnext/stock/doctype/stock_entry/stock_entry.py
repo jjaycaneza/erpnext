@@ -35,6 +35,9 @@ form_grid_templates = {
 }
 
 class StockEntry(StockController):
+	def after_submit(self):
+		self.reload()
+
 	def get_feed(self):
 		return self.stock_entry_type
 
@@ -429,7 +432,6 @@ class StockEntry(StockController):
 				d.serial_no = transferred_serial_no
 
 	def get_stock_and_rate(self):
-		print("Conclusion 5")
 		self.set_work_order_details()
 		self.set_transfer_qty()
 		self.set_actual_qty()
