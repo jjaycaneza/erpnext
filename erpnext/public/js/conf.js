@@ -24,7 +24,7 @@ $(document).bind('toolbar_setup', function() {
 		target="_blank">'+__('Documentation')+'</a></li>').insertBefore($help_menu);
 	$('<li><a data-link-type="forum" href="https://discuss.erpnext.com" \
 		target="_blank">'+__('User Forum')+'</a></li>').insertBefore($help_menu);
-	$('<li><a href="https://github.com/frappe/erpnext/issues" \
+	$('<li><a href="http://192.168.5.211/desk#List/Issue/List" \
 		target="_blank">'+__('Report an Issue')+'</a></li>').insertBefore($help_menu);
 
 });
