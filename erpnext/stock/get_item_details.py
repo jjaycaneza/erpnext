@@ -44,8 +44,10 @@ def get_item_details(args, doc=None):
 			"set_warehouse": ""
 		}
 	"""
+
 	args = process_args(args)
 	item = frappe.get_cached_doc("Item", args.item_code)
+
 	validate_item_details(args, item)
 
 	out = get_basic_details(args, item)
@@ -60,7 +62,9 @@ def get_item_details(args, doc=None):
 
 	update_party_blanket_order(args, out)
 
-	get_price_list_rate(args, item, out)
+	if args.doctype:
+		get_price_list_rate(args, item, out)
+
 
 	if args.customer and cint(args.is_pos):
 		out.update(get_pos_profile_item_details(args.company, args))
@@ -89,7 +93,6 @@ def get_item_details(args, doc=None):
 	if args.doctype == 'Material Request':
 		out.rate = args.rate or out.price_list_rate
 		out.amount = flt(args.qty * out.rate)
-
 	return out
 
 def update_stock(args, out):
@@ -321,11 +324,11 @@ def get_basic_details(args, item):
 		else:
 			out["manufacturer_part_no"] = None
 			out["manufacturer"] = None
-
-	child_doctype = args.doctype + ' Item'
-	meta = frappe.get_meta(child_doctype)
-	if meta.get_field("barcode"):
-		update_barcode_value(out)
+	if args.doctype != None:
+		child_doctype = args.doctype + ' Item'
+		meta = frappe.get_meta(child_doctype)
+		if meta.get_field("barcode"):
+			update_barcode_value(out)
 
 	return out
 

@@ -82,33 +82,65 @@ class StockEntry(StockController):
 		self.calculate_rate_and_amount(update_finished_item_rate=False)
 
 	def on_submit(self):
-		lock = ["Receive at Warehouse", "Receive at Branch"]
+		lock = ["Receive at Warehouse", "Receive at Branch","Send to Branch"]
+		print("Natawag na sad")
 		if self.purpose not in lock:
-
-			# frappe.db.sql("UPDATE `tabStock Entry` SET per_transferred = 100 WHERE name=%s", self.name, as_dict=True)
-			# print(self.as_dict())
-			# doc = frappe.get_doc({
-			# 	'doctype':"GL Entry",
-			# 	'account':,
-			# 	'cost_center':self.cost_center,
-			# 	'debit':, 	
-			# 	'credit':,
-			# 	'account_currency':'PHP',
-			# 	'debit_in_account_currency':,
-			# 	'credit_in_account_currency':,
-			# 	'against':,
-			# 	'voucher_type':'Stock Entry',
-			# 	'voucher_no':self.name,
-			# 	'remarks':'Accounting Entry for Stock',
-			# 	'is_opening':'No',
-			# 	'is_advance':'No',
-			# 	# 'fiscal_year':,
-			# 	'company':'Gaisano',
-			# 	'branch':self.branch,
-			# 	'business_units':self.business_units
-			# })
-
+			print("gawas sa lock")
 			self.update_stock_ledger()
+
+		else:
+			print("na sulod sa lock")
+			if self.purpose == "Send to Branch" and self.from_warehouse == "03L - GAISANO COOP FRESH (OSMENA) - G":
+				if len(frappe.get_list("LCV Stock Entry", {"stock_entry": self.name, "docstatus": 1}, ["*"])) == 1:
+					print("Naka sulod na siya para mag update")
+					from erpnext.stock.get_item_details import get_item_details as g_i_d
+					print("WAAAAAAAAAAAAAAAAAAAAAAATCH THIS")
+
+					total_incoming_value = 0.00
+					total_outgoing_value = 0.00
+
+					for item in self.items:
+						print(item.as_dict())
+						args = {
+							'item_code'		: item.item_code,
+							'posting_date'		: self.posting_date,
+							'posting_time'		: self.posting_time,
+							'warehouse'			: cstr(item.s_warehouse) if cstr(item.s_warehouse) else cstr(item.t_warehouse),
+							'serial_no'			: item.serial_no,
+							'company'			: self.company,
+							'qty'				:  -1 * flt(item.transfer_qty) if item.s_warehouse else flt(item.transfer_qty) ,
+							'voucher_type'		: self.doctype,
+							'voucher_no'		: item.name,
+							'allow_zero_valuation': 1,
+							'cost_center'	: item.cost_center,
+							'bom_no'	: item.bom_no ,'expense_account'	: item.expense_account,
+							'transfer_qty'	: item.transfer_qty,
+
+						}
+						incoming_rate = get_incoming_rate(args)
+						print("-------------------------------------------------")
+						valuation_rate = g_i_d(args,doc=self).valuation_rate
+						print(valuation_rate)
+						basic_rate = incoming_rate
+						base_amount = incoming_rate
+						amount = base_amount * item.qty
+						incoming_outgoing = -1*(valuation_rate*item.qty)
+						frappe.db.sql("UPDATE `tabStock Entry Detail` SET valuation_rate = %s,basic_rate = %s,basic_amount = %s,amount = %s,incoming_outgoing=%s WHERE name = %s",
+									  (valuation_rate,basic_rate,base_amount,amount,incoming_outgoing,item.name))
+
+						total_incoming_value += amount
+						total_outgoing_value += amount
+
+					frappe.db.sql("UPDATE `tabStock Entry` SET total_incoming_value = %s,total_outgoing_value=%s,value_difference = %s WHERE name = %s",
+						(total_incoming_value,total_outgoing_value,(total_incoming_value-total_outgoing_value), self.name))
+
+
+
+
+
+					self = frappe.get_doc("Stock Entry",self.name)
+					self.update_stock_ledger()
+				print("Send to branch pero wa na update")
 
 		# self.update_stock_ledger()
 
@@ -632,6 +664,7 @@ class StockEntry(StockController):
 
 		for d in self.get('items'):
 			if cstr(d.t_warehouse):
+				print(d.as_dict())
 				sl_entries.append(self.get_sl_entries(d, {
 					"warehouse": cstr(d.t_warehouse),
 					"actual_qty": flt(d.transfer_qty),
@@ -650,7 +683,8 @@ class StockEntry(StockController):
 
 		if self.docstatus == 2:
 			sl_entries.reverse()
-
+		print("SL ENTRIES CREATED")
+		print(sl_entries)
 		self.make_sl_entries(sl_entries, self.amended_from and 'Yes' or 'No')
 
 	def get_gl_entries(self, warehouse_account):

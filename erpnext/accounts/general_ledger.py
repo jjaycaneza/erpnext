@@ -135,13 +135,22 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 
 def make_entry(args, adv_adj, update_outstanding, from_repost=False):
 
-	pr_with_lcv = frappe.db.sql("SELECT receipt_document FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1")
-	pr_with_lcv  = [item for t in pr_with_lcv for item in t]
+	# pr_with_lcv = frappe.db.sql("SELECT receipt_document FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1")
+	# pr_with_lcv  = [item for t in pr_with_lcv for item in t]
 
-	if args.voucher_no in pr_with_lcv:
-		if args.account == "5039 - Cost of Sales 2 - G":
+
+	if  frappe.db.sql("SELECT * FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1 AND receipt_document = %s",args.voucher_no,as_dict=1) == []:
+		if args.account == "5000 - Cost of Sales - G":
 			args.account = "2003 - Accounts Payable ~ Temporary Stock - G"
 
+	if frappe.db.sql("SELECT * FROM `tabLCV Stock Entry` WHERE docstatus =1 AND stock_entry = %s",args.voucher_no,as_dict=1) == []:
+		if args.account == "1402 - Unrealized Inventory Gain (Loss) - G":
+			print("Na change from Unreal to Inv")
+			print(frappe.db.sql("SELECT * FROM `tabX Transaction Generated SE` WHERE docstatus =1 AND se_code = %s",args.voucher_no,as_dict=1))
+			if frappe.db.sql("SELECT * FROM `tabX Transaction Generated SE` WHERE docstatus =1 AND se_code = %s",args.voucher_no,as_dict=1) ==[]:
+				print("na change na gyd final")
+				args.account = "1400 - Inventory - G"
+	print(args)
 	args.update({"doctype": "GL Entry"})
 	gle = frappe.get_doc(args)
 	gle.flags.ignore_permissions = 1
