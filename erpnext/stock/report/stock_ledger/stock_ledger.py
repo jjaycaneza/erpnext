@@ -21,8 +21,10 @@ def execute(filters=None):
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
+		batch_reference = frappe.get_value("Stock Entry", {"name": sle.voucher_no}, ['batch_reference'])
 
 		sle.update(item_detail)
+		sle.update({"batch_reference": batch_reference})
 		data.append(sle)
 
 		if include_uom:
@@ -52,6 +54,7 @@ def get_columns():
 		{"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 110},
 		{"label": _("Voucher #"), "fieldname": "voucher_no", "fieldtype": "Dynamic Link", "options": "voucher_type", "width": 100},
 		{"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 100},
+		{"label": _("Batch Reference"), "fieldname": "batch_reference", "fieldtype": "Data", "width": 100},
 		{"label": _("Serial #"), "fieldname": "serial_no", "width": 100},
 		{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 100},
 		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 110}
