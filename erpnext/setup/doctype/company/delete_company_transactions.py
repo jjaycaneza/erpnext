@@ -21,6 +21,7 @@ def delete_company_transactions(company_name):
 
 	delete_bins(company_name)
 	delete_lead_addresses(company_name)
+	delete_todo()
 
 	for doctype in frappe.db.sql_list("""select parent from
 		tabDocField where fieldtype='Link' and options='Company'"""):
@@ -112,3 +113,6 @@ def delete_communications(doctype, company_name, company_fieldname):
 			DELETE FROM `tabCommunication` WHERE reference_doctype = %s AND
 			EXISTS (SELECT name FROM `tab{0}` WHERE {1} = %s AND `tabCommunication`.reference_name = name)
 			""".format(doctype, company_fieldname), (doctype, company_name))
+
+def delete_todo():
+	frappe.db.sql("""DELETE FROM tabToDo""")
