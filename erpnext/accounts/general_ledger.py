@@ -138,8 +138,10 @@ def make_entry(args, adv_adj, update_outstanding, from_repost=False):
 	# pr_with_lcv = frappe.db.sql("SELECT receipt_document FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1")
 	# pr_with_lcv  = [item for t in pr_with_lcv for item in t]
 
-
-	if  frappe.db.sql("SELECT * FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1 AND receipt_document = %s",args.voucher_no,as_dict=1) == []:
+	print("skahdkahsdlkashdlkahsdlkhaslkdhlakshdlksahd")
+	if  frappe.db.sql("SELECT * FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1 AND receipt_document = %s",args.voucher_no,as_dict=1) != []:
+		print("NAAAAAAAAAAAAAAAAAAAARAAAAAAAAAAAAAAAAAAAAAAAA")
+		print(args.account)
 		if args.account == "5039 - Cost of Sales 2 - G":
 			args.account = "2006 - Accounts Payable ~ Fresh - G"
 
