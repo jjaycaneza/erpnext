@@ -140,8 +140,8 @@ def make_entry(args, adv_adj, update_outstanding, from_repost=False):
 
 
 	if  frappe.db.sql("SELECT * FROM `tabLanded Cost Purchase Receipt` WHERE docstatus =1 AND receipt_document = %s",args.voucher_no,as_dict=1) == []:
-		if args.account == "5000 - Cost of Sales - G":
-			args.account = "2003 - Accounts Payable ~ Temporary Stock - G"
+		if args.account == "5039 - Cost of Sales 2 - G":
+			args.account = "2006 - Accounts Payable ~ Fresh - G"
 
 	if frappe.db.sql("SELECT * FROM `tabLCV Stock Entry` WHERE docstatus =1 AND stock_entry = %s",args.voucher_no,as_dict=1) == []:
 		if args.account == "1402 - Unrealized Inventory Gain (Loss) - G":
