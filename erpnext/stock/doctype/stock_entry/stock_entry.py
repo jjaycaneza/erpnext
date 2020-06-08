@@ -140,7 +140,10 @@ class StockEntry(StockController):
 
 					self = frappe.get_doc("Stock Entry",self.name)
 					self.update_stock_ledger()
-				print("Send to branch pero wa na update")
+					print("Send to branch pero wa na update")
+			else:
+				self.update_stock_ledger()
+
 
 		# self.update_stock_ledger()
 
