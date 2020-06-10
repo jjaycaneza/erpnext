@@ -91,6 +91,8 @@ class StockEntry(StockController):
 		else:
 			print("na sulod sa lock")
 			if self.purpose == "Send to Branch" and self.from_warehouse == "03L - GAISANO COOP FRESH (OSMENA) - G":
+				if self.total_outgoing_value > 0 and self.total_incoming_value > 0:
+					self.update_stock_ledger()
 				if len(frappe.get_list("LCV Stock Entry", {"stock_entry": self.name, "docstatus": 1}, ["*"])) == 1:
 					print("Naka sulod na siya para mag update")
 					from erpnext.stock.get_item_details import get_item_details as g_i_d
@@ -141,7 +143,7 @@ class StockEntry(StockController):
 					self = frappe.get_doc("Stock Entry",self.name)
 					self.update_stock_ledger()
 					print("Send to branch pero wa na update")
-			else:
+			elif self.purpose !="Receive at Warehouse" or self.purpose != "Receive at Branch":
 				self.update_stock_ledger()
 
 
