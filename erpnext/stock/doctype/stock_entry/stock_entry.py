@@ -143,7 +143,7 @@ class StockEntry(StockController):
 					self = frappe.get_doc("Stock Entry",self.name)
 					self.update_stock_ledger()
 					print("Send to branch pero wa na update")
-			elif self.purpose !="Receive at Warehouse" or self.purpose != "Receive at Branch":
+			elif self.purpose not in ["Receive at Warehouse", "Receive at Branch"]:
 				self.update_stock_ledger()
 
 
