@@ -37,7 +37,7 @@ class StockController(AccountsController):
 				items, warehouses = self.get_items_and_warehouses()
 				update_gl_entries_after(self.posting_date, self.posting_time, warehouses, items,
 					warehouse_account, company=self.company)
-		elif self.doctype in ['Purchase Receipt', 'Purchase Invoice'] and self.docstatus == 1:
+		if self.doctype in ['Purchase Receipt', 'Purchase Invoice'] and self.docstatus == 1 and self.document_type == 'Fixed Assets':
 			gl_entries = []
 			gl_entries = self.get_asset_gl_entry(gl_entries)
 			make_gl_entries(gl_entries, from_repost=from_repost)
